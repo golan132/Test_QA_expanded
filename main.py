@@ -14,7 +14,8 @@ def get_ammeter_ports():
     try:
         if os.path.exists("config/config.yaml"):
             with open("config/config.yaml", "r", encoding="utf-8") as f:
-                ammeters = yaml.safe_load(f).get("ammeters", {})
+                data = yaml.safe_load(f) or {}
+                ammeters = data.get("ammeters", {})
                 for name in ports:
                     ports[name] = ammeters.get(name, {}).get("port", ports[name])
     except Exception as e:
@@ -53,3 +54,6 @@ if __name__ == "__main__":
     
     # Request from CIRCUTOR Ammeter
     request_current_from_ammeter(ports["circutor"], b'MEASURE_CIRCUTOR -get_measurement')
+
+    # Allow daemon threads to finish printing exceptions
+    time.sleep(1)

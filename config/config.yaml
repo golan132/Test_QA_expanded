@@ -1,8 +1,11 @@
 testing:
   sampling:
-    measurements_count: NULL
-    total_duration_seconds: NULL
-    sampling_frequency_hz: NULL
+    mode: "count"
+    measurements_count: 100
+    # total_duration_seconds is deliberately omitted in 'count' mode
+    sampling_frequency_hz: 2.0
+    timeout_seconds: 2.0
+    acceptable_error_rate: 0.1
 
 ammeters:
 #  greenlee:

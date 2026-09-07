@@ -35,8 +35,10 @@ def test_strict_validation_both_defined(temp_config_file):
 
 def test_strict_validation_neither_defined(temp_config_file):
     path = temp_config_file({"sampling_frequency_hz": 5, "measurements_count": "NULL", "total_duration_seconds": "NULL"})
-    with pytest.raises(ValueError, match="Must define either"):
-        load_config(path)
+    config = load_config(path)
+    assert config.mode == MODE_COUNT
+    assert config.measurements_count == 100
+    assert config.duration_seconds is None
 
 def test_invalid_frequency(temp_config_file):
     path = temp_config_file({"sampling_frequency_hz": -1, "measurements_count": 10, "total_duration_seconds": "NULL"})

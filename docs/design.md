@@ -39,9 +39,17 @@ Given the context of ammeter testing, absolute accuracy cannot be determined wit
 - **Decision:** Eliminate the need for Web Servers (like Flask or Django) for result visualization.
 - **Implementation:** We generated completely static, cross-linked HTML files embedded with Vanilla Javascript. QA testers can simply double-click `index.html` from their local filesystem to access dynamic table sorting and statistical graphs instantly.
 
-## 8. Original Bug Fixes
-To make the framework functional, we identified and corrected the following legacy bugs in the provided infrastructure:
+## 8. Configuration-Driven Architecture
+- **Decision:** Eliminate all hardcoded parameters (ports, commands, statistical metrics, graph types, save directories) from the codebase to maximize flexibility.
+- **Implementation:** The entire framework is orchestrated strictly by `config.yaml`. 
+  - `ammeter_factory.py` reads ports and byte-commands directly from the config tree.
+  - `analysis_engine.py` dynamically computes only the statistical metrics explicitly requested in the config.
+  - `dashboard_generator.py` conditionally renders graphs based on the `visualization` config block.
+  This ensures that future changes to hardware or reporting requirements require zero code modifications, only a YAML update.
+
+## 9. Original Bug Fixes
+To make the framework functional and production-ready, we identified and corrected the following legacy bugs in the provided infrastructure:
 1. **Port Mismatch:** `main.py` initialized emulators on 5001, 5002, 5003 instead of the documented 5000, 5001, 5002.
 2. **Command Mismatch:** `main.py` was missing the `-get_measurement` and `-get_data` flags.
 3. **Circutor Emulator Bug:** The original code expected an undocumented `-current` flag. This was patched.
-4. **Logger Fix:** Attached `logging.FileHandler` to actually persist emulator logs to disk.
+4. **Logger Fix & Integration:** Attached `logging.FileHandler` to actually persist emulator logs to disk. Additionally, the `TestLogger` was completely unused in the framework; it was integrated into `AmmeterTestFramework` along with a `StreamHandler` to replace amateur `print()` statements with professional, dual-stream logging (console + file).

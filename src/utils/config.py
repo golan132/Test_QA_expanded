@@ -16,7 +16,8 @@ def load_config(config_path: str) -> Configuration:
         with open(config_path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f) or {}
     except (FileNotFoundError, yaml.YAMLError) as e:
-        print(f"Warning: Failed to load config from {config_path} ({e}). Using robust defaults.")
+        import logging
+        logging.warning(f"Failed to load config from {config_path} ({e}). Using robust defaults.")
         data = {}
     
     sampling = data.get("testing", {}).get("sampling", {})

@@ -12,10 +12,12 @@ from src.testing.persistence import PersistenceLayer
 from src.testing.reporter import ConsoleReporter
 from src.testing.dashboard_generator import DashboardGenerator
 from src.utils.config import load_config
+from src.utils.logger import TestLogger
 
 class AmmeterTestFramework:
     def __init__(self, config_path: str = "config/config.yaml"):
         self.config = load_config(config_path)
+        self.logger = TestLogger("framework")
         
     def run_test(self, ammeter_type: str) -> TestRunResult:
         try:
@@ -85,13 +87,13 @@ class AmmeterTestFramework:
             
             # Print report
             report_text = ConsoleReporter.generate_report(run_result)
-            print(report_text)
-            print(f"Full Dashboard: file:///{os.path.abspath('index.html').replace(chr(92), '/')}")
+            self.logger.info(report_text)
+            self.logger.info(f"Full Dashboard: file:///{os.path.abspath('index.html').replace(chr(92), '/')}")
             
             return run_result
             
         except Exception as e:
-            print(f"\n[FATAL ERROR] Test framework crashed during {ammeter_type} test: {e}")
+            self.logger.error(f"\n[FATAL ERROR] Test framework crashed during {ammeter_type} test: {e}")
             
             # Construct an ERROR result so it's not silently lost
             error_result = TestRunResult(
@@ -118,6 +120,6 @@ class AmmeterTestFramework:
                 run_dir = PersistenceLayer.save_result(error_result, self.config.result_base_dir)
                 DashboardGenerator.generate_dashboard(error_result, run_dir, self.config)
             except Exception as save_err:
-                print(f"Could not save fatal error report: {save_err}")
+                self.logger.error(f"Could not save fatal error report: {save_err}")
                 
             return error_result

@@ -1,4 +1,5 @@
 import time
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
@@ -9,6 +10,7 @@ from src.testing.ammeter_factory import AmmeterFactory
 from src.testing.analysis_engine import AnalysisEngine
 from src.testing.persistence import PersistenceLayer
 from src.testing.reporter import ConsoleReporter
+from src.testing.dashboard_generator import DashboardGenerator
 from src.utils.config import load_config
 
 class AmmeterTestFramework:
@@ -73,10 +75,16 @@ class AmmeterTestFramework:
         
         # Phase 8: Calculate Status and Print Report
         run_result.status = ConsoleReporter.calculate_status(run_result)
-        report_text = ConsoleReporter.generate_report(run_result)
-        print(report_text)
         
         # Phase 7: Persistence
         PersistenceLayer.save_result(run_result)
+        
+        # Phase 12: HTML Dashboard Generation
+        dashboard_path = DashboardGenerator.generate_dashboard(run_result)
+        
+        # Print report
+        report_text = ConsoleReporter.generate_report(run_result)
+        print(report_text)
+        print(f"Full Dashboard: file:///{os.path.abspath(dashboard_path).replace(chr(92), '/')}")
         
         return run_result

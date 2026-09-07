@@ -65,7 +65,7 @@ The `index.html` file serves as the master dashboard. It features:
 - **Recent Executions:** A dynamically sortable table (via Javascript) of every test run, allowing you to instantly open individual test reports.
 
 ### The Unified Folder Structure
-Raw data and specific test artifacts are securely stored in `results/runs/YYYY-MM-DD/`. Inside, you will find perfectly encapsulated folders (e.g., `greenlee_8d8c1127`) containing:
+Raw data and specific test artifacts are stored in `results/runs/`. Each execution of `main.py` creates a timestamped **session folder** (e.g., `2026-09-08_002530/`). Inside, each ammeter tested gets its own subfolder (e.g., `greenlee/`) containing:
 1. `data.json`: Raw telemetry data and metadata.
 2. `report.html`: The individual HTML dashboard for that specific run.
 3. `time_series.png` & `histogram.png`: Data visualizations.

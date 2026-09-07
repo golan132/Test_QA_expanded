@@ -27,8 +27,8 @@ In embedded systems, temporal accuracy is paramount. A naive `time.sleep(interva
 
 ## 5. Result Management: Unified Flat Hierarchy
 Instead of splitting JSON logs into one hierarchy and HTML files into another, or naming folders with unreadable 36-character UUIDs, we designed a unified architecture.
-- **Decision:** `results/runs/YYYY-MM-DD/{ammeter_type}_{short_id}/`
-- **Implementation:** All artifacts for a given test (the raw `data.json`, the `report.html` dashboard, and the graphs `time_series.png`, `histogram.png`) are stored in exactly one place. This makes results portable and trivially easy to share with other QA engineers.
+- **Decision:** `results/runs/YYYY-MM-DD_HHMMSS/{ammeter_type}/`
+- **Implementation:** All tests from a single execution of `main.py` are grouped under one timestamped session folder. Each ammeter gets its own subfolder containing the raw `data.json`, the `report.html` dashboard, and the graphs (`time_series.png`, `histogram.png`). Running `--ammeter all` produces three ammeter subfolders inside the same session; running `--ammeter greenlee` produces only one. This makes results portable and trivially easy to share with other QA engineers.
 
 ## 6. Relative Consistency Analysis
 Given the context of ammeter testing, absolute accuracy cannot be determined without a calibrated reference node.

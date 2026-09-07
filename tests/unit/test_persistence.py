@@ -22,9 +22,12 @@ def test_persistence_saves_json(tmp_path):
         errors=[]
     )
     
-    saved_dir = PersistenceLayer.save_result(result, base_dir=str(tmp_path))
+    session_dir = str(tmp_path / "session_test")
+    saved_dir = PersistenceLayer.save_result(result, session_dir=session_dir)
     assert os.path.exists(saved_dir)
     assert os.path.isdir(saved_dir)
+    # Verify ammeter subfolder was created inside session dir
+    assert saved_dir == os.path.join(session_dir, "greenlee")
     
     saved_file = os.path.join(saved_dir, "data.json")
     with open(saved_file, 'r', encoding='utf-8') as f:

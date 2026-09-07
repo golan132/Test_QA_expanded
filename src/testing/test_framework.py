@@ -19,6 +19,11 @@ class AmmeterTestFramework:
         self.config = load_config(config_path)
         self.logger = TestLogger("framework")
         
+        # Generate a single session folder for this execution.
+        # All ammeter tests within this run share this folder.
+        session_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        self.session_dir = os.path.join(self.config.result_base_dir, session_timestamp)
+        
     def run_test(self, ammeter_type: str) -> TestRunResult:
         try:
             client = AmmeterFactory.get_client(ammeter_type, self.config)
@@ -80,7 +85,7 @@ class AmmeterTestFramework:
             run_result.status = ConsoleReporter.calculate_status(run_result)
             
             # Save result
-            run_dir = PersistenceLayer.save_result(run_result, self.config.result_base_dir)
+            run_dir = PersistenceLayer.save_result(run_result, self.session_dir)
             
             # Generate Dashboard
             DashboardGenerator.generate_dashboard(run_result, run_dir, self.config)
@@ -117,7 +122,7 @@ class AmmeterTestFramework:
             
             # Try to save the error report if possible
             try:
-                run_dir = PersistenceLayer.save_result(error_result, self.config.result_base_dir)
+                run_dir = PersistenceLayer.save_result(error_result, self.session_dir)
                 DashboardGenerator.generate_dashboard(error_result, run_dir, self.config)
             except Exception as save_err:
                 self.logger.error(f"Could not save fatal error report: {save_err}")

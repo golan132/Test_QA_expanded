@@ -66,11 +66,16 @@ def load_config(config_path: str) -> Configuration:
     if error_rate == "NULL" or error_rate is None:
         error_rate = DEFAULT_ACCEPTABLE_ERROR_RATE
 
+    ammeters_config = data.get("ammeters", {})
+    if ammeters_config is None:
+        ammeters_config = {}
+
     return Configuration(
         mode=mode,
         sampling_frequency_hz=freq,
         timeout_seconds=float(timeout),
         measurements_count=count,
         duration_seconds=duration,
-        acceptable_error_rate=float(error_rate)
+        acceptable_error_rate=float(error_rate),
+        ammeters_config=ammeters_config
     )

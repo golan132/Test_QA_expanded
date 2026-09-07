@@ -1,28 +1,24 @@
 from src.testing.ammeter_client import AmmeterClient
+from src.testing.types import Configuration
 
 class AmmeterFactory:
-    # Default commands according to specs
-    _COMMANDS = {
-        "greenlee": b'MEASURE_GREENLEE -get_measurement',
-        "entes": b'MEASURE_ENTES -get_data',
-        "circutor": b'MEASURE_CIRCUTOR -get_measurement'
-    }
-    
-    # Default ports
-    _PORTS = {
-        "greenlee": 5000,
-        "entes": 5001,
-        "circutor": 5002
-    }
-
     @classmethod
-    def get_client(cls, ammeter_type: str, timeout: float = 2.0) -> AmmeterClient:
+    def get_client(cls, ammeter_type: str, config: Configuration) -> AmmeterClient:
         ammeter_type = ammeter_type.lower()
-        if ammeter_type not in cls._COMMANDS:
-            raise ValueError(f"Unknown ammeter type: {ammeter_type}")
+        
+        if ammeter_type not in config.ammeters_config:
+            raise ValueError(f"Unknown or unconfigured ammeter type: {ammeter_type}")
+            
+        ammeter_settings = config.ammeters_config[ammeter_type]
+        
+        port = ammeter_settings.get("port")
+        command_str = ammeter_settings.get("command")
+        
+        if not port or not command_str:
+            raise ValueError(f"Missing port or command in config for ammeter type: {ammeter_type}")
             
         return AmmeterClient(
-            port=cls._PORTS[ammeter_type],
-            command=cls._COMMANDS[ammeter_type],
-            timeout=timeout
+            port=int(port),
+            command=command_str.encode('utf-8'),
+            timeout=config.timeout_seconds
         )

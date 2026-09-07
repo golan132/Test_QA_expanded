@@ -14,6 +14,14 @@ testing:
     sampling_frequency_hz: 10
     timeout_seconds: 1.0
     acceptable_error_rate: 0.1
+
+ammeters:
+  greenlee:
+    port: 5000
+    command: "MOCK_CMD"
+  circutor:
+    port: 5002
+    command: "MOCK_CMD"
 """)
     return str(config_file)
 

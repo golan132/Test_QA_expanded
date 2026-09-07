@@ -56,3 +56,21 @@ def test_config_fallback_on_malformed_yaml(tmp_path):
     config = load_config(str(path))
     assert config.mode == MODE_COUNT
     assert config.measurements_count == 100
+
+def test_load_config_with_ammeters(tmp_path):
+    path = tmp_path / "config.yaml"
+    yaml_content = """
+    testing:
+      sampling:
+        sampling_frequency_hz: 10
+        measurements_count: 5
+    ammeters:
+      test_ammeter:
+        port: 9999
+        command: "TEST_CMD"
+    """
+    path.write_text(yaml_content)
+    config = load_config(str(path))
+    assert "test_ammeter" in config.ammeters_config
+    assert config.ammeters_config["test_ammeter"]["port"] == 9999
+    assert config.ammeters_config["test_ammeter"]["command"] == "TEST_CMD"

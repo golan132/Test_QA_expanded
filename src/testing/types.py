@@ -9,6 +9,7 @@ class Configuration:
     measurements_count: Optional[int] = None
     duration_seconds: Optional[float] = None
     acceptable_error_rate: float = 0.1
+    ammeters_config: Dict[str, Dict[str, any]] = field(default_factory=dict)
 
 @dataclass
 class MeasurementResult:

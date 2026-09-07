@@ -19,7 +19,7 @@ class AmmeterTestFramework:
         
     def run_test(self, ammeter_type: str) -> TestRunResult:
         try:
-            client = AmmeterFactory.get_client(ammeter_type, self.config.timeout_seconds)
+            client = AmmeterFactory.get_client(ammeter_type, self.config)
             
             # Calculate expected samples
             if self.config.mode == MODE_COUNT:

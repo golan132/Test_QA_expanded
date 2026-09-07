@@ -76,15 +76,15 @@ class AmmeterTestFramework:
         # Phase 8: Calculate Status and Print Report
         run_result.status = ConsoleReporter.calculate_status(run_result)
         
-        # Phase 7: Persistence
-        PersistenceLayer.save_result(run_result)
+        # Save result
+        run_dir = PersistenceLayer.save_result(run_result)
         
-        # Phase 12: HTML Dashboard Generation
-        dashboard_path = DashboardGenerator.generate_dashboard(run_result)
+        # Generate Dashboard
+        DashboardGenerator.generate_dashboard(run_result, run_dir)
         
         # Print report
         report_text = ConsoleReporter.generate_report(run_result)
         print(report_text)
-        print(f"Full Dashboard: file:///{os.path.abspath(dashboard_path).replace(chr(92), '/')}")
+        print(f"Full Dashboard: file:///{os.path.abspath('index.html').replace(chr(92), '/')}")
         
         return run_result

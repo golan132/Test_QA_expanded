@@ -5,28 +5,29 @@ from typing import Dict
 
 class ConsistencyAnalyzer:
     @staticmethod
-    def analyze_history(results_dir: str = "results/data") -> Dict[str, dict]:
+    def analyze_history(results_dir: str = "results/runs") -> Dict[str, dict]:
         if not os.path.exists(results_dir):
             return {}
             
         history = {}
-        for filename in os.listdir(results_dir):
-            if filename.endswith(".json"):
-                path = os.path.join(results_dir, filename)
-                with open(path, 'r', encoding='utf-8') as f:
-                    try:
-                        data = json.load(f)
-                    except json.JSONDecodeError:
-                        continue
-                    
-                ammeter = data.get("ammeter_type")
-                stats = data.get("statistics", {})
-                mean = stats.get("mean") if stats else None
-                
-                if ammeter and mean is not None:
-                    if ammeter not in history:
-                        history[ammeter] = []
-                    history[ammeter].append(mean)
+        for root, _, files in os.walk(results_dir):
+            for filename in files:
+                if filename == "data.json":
+                    path = os.path.join(root, filename)
+                    with open(path, 'r', encoding='utf-8') as f:
+                        try:
+                            data = json.load(f)
+                        except json.JSONDecodeError:
+                            continue
+                        
+                        ammeter = data.get("ammeter_type")
+                        stats = data.get("statistics", {})
+                        mean = stats.get("mean") if stats else None
+                        
+                        if ammeter and mean is not None:
+                            if ammeter not in history:
+                                history[ammeter] = []
+                            history[ammeter].append(mean)
                     
         consistency_report = {}
         for ammeter, means in history.items():

@@ -8,17 +8,25 @@ def test_analyze_history(tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     
-    file1 = data_dir / "run_1.json"
+    dir1 = data_dir / "test1"
+    dir1.mkdir()
+    file1 = dir1 / "data.json"
     file1.write_text(json.dumps({"ammeter_type": "greenlee", "statistics": {"mean": 5.0}}))
     
-    file2 = data_dir / "run_2.json"
+    dir2 = data_dir / "test2"
+    dir2.mkdir()
+    file2 = dir2 / "data.json"
     file2.write_text(json.dumps({"ammeter_type": "greenlee", "statistics": {"mean": 7.0}}))
     
-    file3 = data_dir / "run_3.json"
+    dir3 = data_dir / "test3"
+    dir3.mkdir()
+    file3 = dir3 / "data.json"
     file3.write_text(json.dumps({"ammeter_type": "entes", "statistics": {"mean": 10.0}}))
     
     # Missing mean
-    file4 = data_dir / "run_4.json"
+    dir4 = data_dir / "test4"
+    dir4.mkdir()
+    file4 = dir4 / "data.json"
     file4.write_text(json.dumps({"ammeter_type": "entes", "statistics": {}}))
     
     report = ConsistencyAnalyzer.analyze_history(str(data_dir))

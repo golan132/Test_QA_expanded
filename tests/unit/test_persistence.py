@@ -22,9 +22,11 @@ def test_persistence_saves_json(tmp_path):
         errors=[]
     )
     
-    saved_file = PersistenceLayer.save_result(result, base_dir=str(tmp_path))
-    assert os.path.exists(saved_file)
+    saved_dir = PersistenceLayer.save_result(result, base_dir=str(tmp_path))
+    assert os.path.exists(saved_dir)
+    assert os.path.isdir(saved_dir)
     
+    saved_file = os.path.join(saved_dir, "data.json")
     with open(saved_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
         assert data["test_id"] == "test-1234"

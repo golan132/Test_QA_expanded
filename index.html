@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Global Ammeter Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #212529; margin: 0; padding: 40px; }
+        h1, h2 { color: #343a40; margin-bottom: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #dee2e6; }
+        .header { border-bottom: 2px solid #343a40; padding-bottom: 10px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 50px; font-size: 14px; }
+        th, td { padding: 12px 15px; border: 1px solid #dee2e6; text-align: left; }
+        th { background-color: #e9ecef; font-weight: 600; color: #495057; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; cursor: pointer; user-select: none; }
+        th:hover { background-color: #dee2e6; }
+        tr:hover { background-color: #f1f3f5; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; display: inline-block; text-align: center; min-width: 60px; }
+        .status-badge.pass { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .status-badge.fail { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .status-badge.error { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+        
+        .view-link { color: #0d6efd; text-decoration: none; font-weight: 500; }
+        .view-link:hover { text-decoration: underline; color: #0a58ca; }
+        
+        .sort-icon { font-size: 14px; margin-left: 5px; color: #6c757d; font-weight: bold; }
+        
+        .global-stats { display: flex; gap: 20px; margin-bottom: 40px; justify-content: center; flex-wrap: wrap; }
+        .graph-card { flex: 1; min-width: 400px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: center; }
+        .graph-card img { max-width: 100%; border-radius: 4px; }
+    </style>
+    <script>
+        function sortTable(n, tableId) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById(tableId);
+            switching = true;
+            dir = "asc"; 
+            
+            while (switching) {
+                switching = false;
+                rows = table.getElementsByTagName("TR");
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    
+                    var tdX = rows[i].getElementsByTagName("TD");
+                    var tdY = rows[i + 1].getElementsByTagName("TD");
+                    if (tdX.length <= n || tdY.length <= n) continue;
+                    
+                    x = tdX[n];
+                    y = tdY[n];
+                    
+                    var xVal = x.getAttribute("data-sort") || x.innerText;
+                    var yVal = y.getAttribute("data-sort") || y.innerText;
+                    
+                    var xNum = parseFloat(xVal);
+                    var yNum = parseFloat(yVal);
+                    
+                    if (!isNaN(xNum) && !isNaN(yNum)) {
+                        xVal = xNum;
+                        yVal = yNum;
+                    } else {
+                        xVal = xVal.toLowerCase();
+                        yVal = yVal.toLowerCase();
+                    }
+                    
+                    if (dir == "asc") {
+                        if (xVal > yVal) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xVal < yVal) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount ++; 
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+            
+            // Update arrows
+            var headers = table.rows[0].getElementsByTagName("TH");
+            for (var j = 0; j < headers.length; j++) {
+                var icon = headers[j].querySelector(".sort-icon");
+                if (icon) icon.innerHTML = "↕";
+            }
+            var activeIcon = headers[n].querySelector(".sort-icon");
+            if (activeIcon) {
+                activeIcon.innerHTML = (dir === "asc") ? "↑" : "↓";
+                activeIcon.style.color = "#000";
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test QA Framework - Global Dashboard</h1>
+            <p style="color: #6c757d; font-size: 14px;">Automated measurement history and consistency tracking.</p>
+        </div>
+        
+        
+            <h2>Global Statistics</h2>
+            <div class="global-stats">
+                <div class="graph-card">
+                    <img src="results/global_graphs/status_pie.png" alt="Status Distribution">
+                </div>
+                <div class="graph-card">
+                    <img src="results/global_graphs/ammeter_pass_rates.png" alt="Pass Rates">
+                </div>
+            </div>
+            
+        
+        <h2>Relative Consistency Analysis</h2>
+        <table id="consistencyTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0, 'consistencyTable')">Ammeter Type <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(1, 'consistencyTable')">Historical Runs <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(2, 'consistencyTable')">Mean of Means (A) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(3, 'consistencyTable')">Std Dev of Means (A) <span class="sort-icon">↕</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td><strong>CIRCUTOR</strong></td>
+                <td>1</td>
+                <td>0.0294</td>
+                <td>0.0</td>
+            </tr>
+            
+            <tr>
+                <td><strong>ENTES</strong></td>
+                <td>1</td>
+                <td>85.7195</td>
+                <td>0.0</td>
+            </tr>
+            
+            <tr>
+                <td><strong>GREENLEE</strong></td>
+                <td>3</td>
+                <td>3.8204</td>
+                <td>2.9092</td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
+        <h2>Recent Execution History</h2>
+        <table id="runsTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0, 'runsTable')">Timestamp <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(1, 'runsTable')">Ammeter Type <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(2, 'runsTable')">Expected Samples <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(3, 'runsTable')">Successful Samples <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(4, 'runsTable')">Pass Rate <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(5, 'runsTable')">Status <span class="sort-icon">↕</span></th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td data-sort="2026-09-07T20:16:22Z">07/09/2026 20:16:22</td>
+                <td data-sort="CIRCUTOR">CIRCUTOR</td>
+                <td data-sort="5">5</td>
+                <td data-sort="5">5</td>
+                <td data-sort="100.0">100.0%</td>
+                <td data-sort="PASS"><span class="status-badge pass">PASS</span></td>
+                <td><a href="results/runs/2026-09-07/circutor_ea0b95af/report.html" class="view-link">View Report</a></td>
+            </tr>
+            
+            <tr>
+                <td data-sort="2026-09-07T20:16:18Z">07/09/2026 20:16:18</td>
+                <td data-sort="ENTES">ENTES</td>
+                <td data-sort="5">5</td>
+                <td data-sort="5">5</td>
+                <td data-sort="100.0">100.0%</td>
+                <td data-sort="PASS"><span class="status-badge pass">PASS</span></td>
+                <td><a href="results/runs/2026-09-07/entes_aa6c49f2/report.html" class="view-link">View Report</a></td>
+            </tr>
+            
+            <tr>
+                <td data-sort="2026-09-07T20:16:15Z">07/09/2026 20:16:15</td>
+                <td data-sort="GREENLEE">GREENLEE</td>
+                <td data-sort="5">5</td>
+                <td data-sort="5">5</td>
+                <td data-sort="100.0">100.0%</td>
+                <td data-sort="PASS"><span class="status-badge pass">PASS</span></td>
+                <td><a href="results/runs/2026-09-07/greenlee_8d8c1127/report.html" class="view-link">View Report</a></td>
+            </tr>
+            
+            <tr>
+                <td data-sort="2026-09-07T20:16:01Z">07/09/2026 20:16:01</td>
+                <td data-sort="GREENLEE">GREENLEE</td>
+                <td data-sort="3">3</td>
+                <td data-sort="2">2</td>
+                <td data-sort="66.66666666666666">66.7%</td>
+                <td data-sort="FAIL"><span class="status-badge fail">FAIL</span></td>
+                <td><a href="results/runs/2026-09-07/greenlee_8b7ead6c/report.html" class="view-link">View Report</a></td>
+            </tr>
+            
+            <tr>
+                <td data-sort="2026-09-07T20:15:12Z">07/09/2026 20:15:12</td>
+                <td data-sort="GREENLEE">GREENLEE</td>
+                <td data-sort="3">3</td>
+                <td data-sort="2">2</td>
+                <td data-sort="66.66666666666666">66.7%</td>
+                <td data-sort="FAIL"><span class="status-badge fail">FAIL</span></td>
+                <td><a href="results/runs/2026-09-07/greenlee_30c7c33d/report.html" class="view-link">View Report</a></td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

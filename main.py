@@ -14,15 +14,10 @@ def get_ammeter_ports():
     try:
         if os.path.exists("config/config.yaml"):
             with open("config/config.yaml", "r", encoding="utf-8") as f:
-                config = yaml.safe_load(f)
-                ammeters = config.get("ammeters")
-                if ammeters:
-                    if ammeters.get("greenlee") and ammeters["greenlee"].get("port"):
-                        ports["greenlee"] = ammeters["greenlee"]["port"]
-                    if ammeters.get("entes") and ammeters["entes"].get("port"):
-                        ports["entes"] = ammeters["entes"]["port"]
-                    if ammeters.get("circutor") and ammeters["circutor"].get("port"):
-                        ports["circutor"] = ammeters["circutor"]["port"]
+                ammeters = (yaml.safe_load(f) or {}).get("ammeters") or {}
+                for key, val in ammeters.items():
+                    if isinstance(val, dict) and val.get("port"):
+                        ports[key] = val["port"]
     except Exception as e:
         print(f"Failed to load ports from config, using defaults: {e}")
     return ports

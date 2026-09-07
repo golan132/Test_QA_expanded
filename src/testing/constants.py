@@ -1,0 +1,13 @@
+# Sampling Modes
+MODE_COUNT = "count"
+MODE_DURATION = "duration"
+
+# Test Statuses
+STATUS_PASS = "PASS"
+STATUS_PARTIAL = "PARTIAL"
+STATUS_FAIL = "FAIL"
+STATUS_ERROR = "ERROR"
+
+# Default configuration values
+DEFAULT_TIMEOUT_SECONDS = 2.0
+DEFAULT_ACCEPTABLE_ERROR_RATE = 0.1

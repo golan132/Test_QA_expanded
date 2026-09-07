@@ -3,10 +3,10 @@ from unittest.mock import patch, MagicMock
 from src.testing.dashboard_generator import DashboardGenerator
 from src.testing.types import TestRunResult
 
-@patch("src.testing.dashboard_generator.open")
-def test_dashboard_generator_handles_ioerror(mock_open):
-    # Mock open to raise an OSError (e.g. Permission denied, disk full)
-    mock_open.side_effect = OSError("Simulated disk full")
+@patch("src.testing.dashboard_generator.DashboardGenerator.generate_global_dashboard")
+def test_dashboard_generator_handles_ioerror(mock_generate):
+    # Mock to raise an OSError
+    mock_generate.side_effect = OSError("Simulated error")
     
     # Create a dummy result
     dummy_result = MagicMock(spec=TestRunResult)

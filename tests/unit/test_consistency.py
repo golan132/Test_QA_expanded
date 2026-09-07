@@ -40,3 +40,15 @@ def test_analyze_history(tmp_path):
     assert report["entes"]["historical_runs"] == 1
     assert report["entes"]["mean_of_means"] == 10.0
     assert report["entes"]["std_dev_of_means"] == 0.0
+
+def test_get_most_reliable_ammeter():
+    report = {
+        "greenlee": {"std_dev_of_means": 0.08},
+        "entes": {"std_dev_of_means": 15.0},
+        "circutor": {"std_dev_of_means": 0.01}
+    }
+    best = ConsistencyAnalyzer.get_most_reliable_ammeter(report)
+    assert "CIRCUTOR" in best
+    
+    empty = ConsistencyAnalyzer.get_most_reliable_ammeter({})
+    assert "No historical data" in empty

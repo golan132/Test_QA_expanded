@@ -27,3 +27,22 @@ def test_calculate_status_error_no_data():
 def test_calculate_status_error_zero_expected():
     res = create_mock_result(0, 0, 0)
     assert ConsoleReporter.calculate_status(res) == "ERROR"
+
+def test_generate_report_from_dict():
+    mock_dict = {
+        "ammeter_type": "greenlee",
+        "test_id": "1234",
+        "timestamp": "now",
+        "status": "PASS",
+        "attempted_samples": 10,
+        "expected_samples": 10,
+        "successful_samples": 10,
+        "failed_samples": 0,
+        "statistics": {"mean": 5.0, "median": 4.0, "std_dev": 0.5, "min": 1.0, "max": 10.0},
+        "errors": [{"timestamp": "now", "error_type": "Timeout", "error_message": "test"}]
+    }
+    report = ConsoleReporter.generate_report_from_dict(mock_dict)
+    assert "GREENLEE" in report
+    assert "1234" in report
+    assert "Mean: 5.0" in report
+    assert "Timeout: test" in report

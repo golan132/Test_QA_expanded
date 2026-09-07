@@ -10,4 +10,3 @@ def request_current_from_ammeter(port: int, command: bytes):
             print(f"Received current measurement from port {port}: {data.decode('utf-8')} A")
         else:
             print("No data received.")
-

@@ -1,8 +1,7 @@
 testing:
   sampling:
-    mode: "count"
-    measurements_count: 5
-    # total_duration_seconds: 10.0 # Uncomment to use duration mode (must comment out measurements_count)
+    # measurements_count: 5
+    total_duration_seconds: 60.0 # Uncomment to use duration mode (must comment out measurements_count)
     sampling_frequency_hz: 2.0
     timeout_seconds: 2.0
     acceptable_error_rate: 0.1
@@ -35,5 +34,3 @@ analysis:
 
 result_management:
   base_dir: "results/runs"
-  format: "html"
-  retention_policy: "keep_all"

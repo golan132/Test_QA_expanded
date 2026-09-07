@@ -35,3 +35,23 @@ def test_persistence_saves_json(tmp_path):
         assert data["test_id"] == "test-1234"
         assert data["status"] == "PASS"
         assert data["configuration"]["mode"] == MODE_COUNT
+
+def test_persistence_get_history(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    
+    dir1 = data_dir / "test1"
+    dir1.mkdir()
+    file1 = dir1 / "data.json"
+    file1.write_text(json.dumps({"test_id": "abc", "ammeter_type": "greenlee", "timestamp": "2026-09-07T12:00:00Z"}))
+    
+    runs = PersistenceLayer.get_all_runs(str(data_dir))
+    assert len(runs) == 1
+    assert runs[0]["test_id"] == "abc"
+    assert runs[0]["ammeter_type"] == "GREENLEE"
+    
+    run_data = PersistenceLayer.get_run_by_id("abc", str(data_dir))
+    assert run_data["test_id"] == "abc"
+    assert run_data["ammeter_type"] == "greenlee"
+    
+    assert PersistenceLayer.get_run_by_id("nonexistent", str(data_dir)) is None

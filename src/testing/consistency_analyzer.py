@@ -45,3 +45,21 @@ class ConsistencyAnalyzer:
                 }
                 
         return consistency_report
+
+    @staticmethod
+    def get_most_reliable_ammeter(consistency_report: Dict[str, dict]) -> str:
+        if not consistency_report:
+            return "No historical data available to determine reliability."
+            
+        best_ammeter = None
+        best_std_dev = float('inf')
+        
+        for ammeter, data in consistency_report.items():
+            std_dev = data.get("std_dev_of_means")
+            if std_dev is not None and std_dev < best_std_dev:
+                best_std_dev = std_dev
+                best_ammeter = ammeter
+                
+        if best_ammeter:
+            return f"{best_ammeter.upper()} (Drift/StdDev: {best_std_dev:.5f}A)"
+        return "Insufficient data to determine reliability."

@@ -7,6 +7,7 @@ from src.testing.types import TestRunResult, MeasurementResult
 from src.testing.constants import MODE_COUNT, MODE_DURATION
 from src.testing.ammeter_factory import AmmeterFactory
 from src.testing.analysis_engine import AnalysisEngine
+from src.testing.persistence import PersistenceLayer
 from src.utils.config import load_config
 
 class AmmeterTestFramework:
@@ -44,7 +45,7 @@ class AmmeterTestFramework:
         # Phase 6: Statistical Analysis
         stats = AnalysisEngine.analyze(results)
         
-        return TestRunResult(
+        run_result = TestRunResult(
             test_id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             ammeter_type=ammeter_type,
@@ -58,3 +59,8 @@ class AmmeterTestFramework:
             statistics=stats,
             errors=[] # to be calculated in Phase 8
         )
+        
+        # Phase 7: Persistence
+        PersistenceLayer.save_result(run_result)
+        
+        return run_result

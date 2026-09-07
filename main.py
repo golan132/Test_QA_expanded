@@ -1,12 +1,14 @@
 import threading
 import time
-import yaml
+import argparse
+import sys
 import os
+import yaml
 
 from Ammeters.Circutor_Ammeter import CircutorAmmeter
 from Ammeters.Entes_Ammeter import EntesAmmeter
 from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
-from Ammeters.client import request_current_from_ammeter
+from src.testing.test_framework import AmmeterTestFramework
 
 
 def get_ammeter_ports():
@@ -36,6 +38,11 @@ def run_circutor_emulator(port):
     circutor.start_server()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Ammeter Emulator & Testing Framework")
+    parser.add_argument("--ammeter", type=str, choices=["greenlee", "entes", "circutor", "all"], 
+                        help="Run test framework against specified ammeter")
+    args = parser.parse_args()
+
     ports = get_ammeter_ports()
     
     # Start each ammeter in a separate thread
@@ -44,16 +51,21 @@ if __name__ == "__main__":
     threading.Thread(target=run_circutor_emulator, args=(ports["circutor"],), daemon=True).start()
 
     # Wait for the servers to start
-    time.sleep(5)
-    
-    # Request from Greenlee Ammeter
-    request_current_from_ammeter(ports["greenlee"], b'MEASURE_GREENLEE -get_measurement')
-    
-    # Request from ENTES Ammeter
-    request_current_from_ammeter(ports["entes"], b'MEASURE_ENTES -get_data')
-    
-    # Request from CIRCUTOR Ammeter
-    request_current_from_ammeter(ports["circutor"], b'MEASURE_CIRCUTOR -get_measurement')
-
-    # Allow daemon threads to finish printing exceptions
     time.sleep(1)
+    
+    if args.ammeter:
+        framework = AmmeterTestFramework()
+        ammeters_to_test = ["greenlee", "entes", "circutor"] if args.ammeter == "all" else [args.ammeter]
+        
+        for ammeter in ammeters_to_test:
+            print(f"\nStarting test for {ammeter}...")
+            framework.run_test(ammeter)
+            time.sleep(1)
+    else:
+        print("\nEmulators are running. Use --ammeter to run tests.")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("Exiting...")
+

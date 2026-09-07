@@ -8,6 +8,7 @@ from src.testing.constants import MODE_COUNT, MODE_DURATION
 from src.testing.ammeter_factory import AmmeterFactory
 from src.testing.analysis_engine import AnalysisEngine
 from src.testing.persistence import PersistenceLayer
+from src.testing.reporter import ConsoleReporter
 from src.utils.config import load_config
 
 class AmmeterTestFramework:
@@ -38,18 +39,28 @@ class AmmeterTestFramework:
             if sleep_time > 0:
                 time.sleep(sleep_time)
                 
-        # Basic counting (full logic in Phase 6/8)
+        # Basic counting
         successful = sum(1 for r in results if r.success)
         failed = expected_samples - successful
         
         # Phase 6: Statistical Analysis
         stats = AnalysisEngine.analyze(results)
         
+        # Collect errors
+        errors = []
+        for r in results:
+            if not r.success and r.error_message:
+                errors.append({
+                    "timestamp": r.timestamp,
+                    "error_type": r.error_type or "Unknown",
+                    "error_message": r.error_message
+                })
+        
         run_result = TestRunResult(
             test_id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             ammeter_type=ammeter_type,
-            status="PENDING", # to be calculated in Phase 8
+            status="PENDING", # to be calculated below
             configuration=self.config,
             expected_samples=expected_samples,
             attempted_samples=len(results),
@@ -57,8 +68,13 @@ class AmmeterTestFramework:
             failed_samples=failed,
             measurements=results,
             statistics=stats,
-            errors=[] # to be calculated in Phase 8
+            errors=errors
         )
+        
+        # Phase 8: Calculate Status and Print Report
+        run_result.status = ConsoleReporter.calculate_status(run_result)
+        report_text = ConsoleReporter.generate_report(run_result)
+        print(report_text)
         
         # Phase 7: Persistence
         PersistenceLayer.save_result(run_result)

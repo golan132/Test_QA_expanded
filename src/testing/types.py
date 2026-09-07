@@ -10,6 +10,10 @@ class Configuration:
     duration_seconds: Optional[float] = None
     acceptable_error_rate: float = 0.1
     ammeters_config: Dict[str, Dict[str, any]] = field(default_factory=dict)
+    metrics: List[str] = field(default_factory=lambda: ["mean", "median", "std_dev", "min", "max"])
+    visualizations_enabled: bool = True
+    plot_types: List[str] = field(default_factory=lambda: ["time_series", "histogram", "global_pie_chart", "global_bar_chart"])
+    result_base_dir: str = "results/runs"
 
 @dataclass
 class MeasurementResult:

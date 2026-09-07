@@ -47,7 +47,7 @@ class AmmeterTestFramework:
             failed = expected_samples - successful
             
             # Phase 6: Statistical Analysis
-            stats = AnalysisEngine.analyze(results)
+            stats = AnalysisEngine.analyze(results, self.config.metrics)
             
             # Collect errors
             errors = []
@@ -78,10 +78,10 @@ class AmmeterTestFramework:
             run_result.status = ConsoleReporter.calculate_status(run_result)
             
             # Save result
-            run_dir = PersistenceLayer.save_result(run_result)
+            run_dir = PersistenceLayer.save_result(run_result, self.config.result_base_dir)
             
             # Generate Dashboard
-            DashboardGenerator.generate_dashboard(run_result, run_dir)
+            DashboardGenerator.generate_dashboard(run_result, run_dir, self.config)
             
             # Print report
             report_text = ConsoleReporter.generate_report(run_result)
@@ -105,7 +105,7 @@ class AmmeterTestFramework:
                 successful_samples=0,
                 failed_samples=0,
                 measurements=[],
-                statistics={"mean": None, "median": None, "std_dev": None, "min": None, "max": None},
+                statistics={m: None for m in self.config.metrics},
                 errors=[{
                     "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "error_type": "FatalFrameworkError",
@@ -115,8 +115,8 @@ class AmmeterTestFramework:
             
             # Try to save the error report if possible
             try:
-                run_dir = PersistenceLayer.save_result(error_result)
-                DashboardGenerator.generate_dashboard(error_result, run_dir)
+                run_dir = PersistenceLayer.save_result(error_result, self.config.result_base_dir)
+                DashboardGenerator.generate_dashboard(error_result, run_dir, self.config)
             except Exception as save_err:
                 print(f"Could not save fatal error report: {save_err}")
                 

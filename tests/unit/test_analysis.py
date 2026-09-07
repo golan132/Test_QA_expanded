@@ -37,3 +37,21 @@ def test_ignores_failed_measurements():
     assert stats["min"] == 2.0
     assert stats["max"] == 4.0
     assert stats["std_dev"] is not None
+
+def test_analyze_selective_metrics():
+    results = [create_result(2.0), create_result(4.0), create_result(6.0)]
+    stats = AnalysisEngine.analyze(results, metrics=["mean", "max"])
+    assert "mean" in stats
+    assert "max" in stats
+    assert "std_dev" not in stats
+    assert "min" not in stats
+    assert stats["mean"] == 4.0
+    assert stats["max"] == 6.0
+
+def test_analyze_single_metric():
+    results = [create_result(10.0), create_result(20.0)]
+    stats = AnalysisEngine.analyze(results, metrics=["median"])
+    assert "median" in stats
+    assert stats["median"] == 15.0
+    assert "mean" not in stats
+

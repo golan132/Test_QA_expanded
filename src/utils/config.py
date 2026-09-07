@@ -69,6 +69,29 @@ def load_config(config_path: str) -> Configuration:
     ammeters_config = data.get("ammeters", {})
     if ammeters_config is None:
         ammeters_config = {}
+        
+    analysis = data.get("analysis", {})
+    if analysis is None:
+        analysis = {}
+        
+    metrics = analysis.get("statistical_metrics")
+    if metrics is None:
+        metrics = ["mean", "median", "std_dev", "min", "max"]
+        
+    visualization = analysis.get("visualization", {})
+    if visualization is None:
+        visualization = {}
+        
+    vis_enabled = visualization.get("enabled", True)
+    plot_types = visualization.get("plot_types")
+    if plot_types is None:
+        plot_types = ["time_series", "histogram", "global_pie_chart", "global_bar_chart"]
+        
+    result_management = data.get("result_management", {})
+    if result_management is None:
+        result_management = {}
+        
+    base_dir = result_management.get("base_dir", "results/runs")
 
     return Configuration(
         mode=mode,
@@ -77,5 +100,9 @@ def load_config(config_path: str) -> Configuration:
         measurements_count=count,
         duration_seconds=duration,
         acceptable_error_rate=float(error_rate),
-        ammeters_config=ammeters_config
+        ammeters_config=ammeters_config,
+        metrics=metrics,
+        visualizations_enabled=vis_enabled,
+        plot_types=plot_types,
+        result_base_dir=base_dir
     )

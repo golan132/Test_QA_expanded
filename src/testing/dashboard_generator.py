@@ -4,8 +4,8 @@ import matplotlib
 matplotlib.use('Agg') # Headless backend
 import matplotlib.pyplot as plt
 from datetime import datetime
-from typing import List
-from src.testing.types import TestRunResult
+from typing import List, Optional
+from src.testing.types import TestRunResult, Configuration
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
 from src.testing.dashboard_templates import REPORT_TEMPLATE, GLOBAL_DASHBOARD_TEMPLATE
 
@@ -18,39 +18,44 @@ def format_timestamp(ts: str) -> str:
 
 class DashboardGenerator:
     @staticmethod
-    def generate_dashboard(result: TestRunResult, target_dir: str) -> str:
+    def generate_dashboard(result: TestRunResult, target_dir: str, config: Optional[Configuration] = None) -> str:
         try:
-            # In the new architecture, target_dir is already fully qualified: results/runs/YYYY-MM-DD/{ammeter}_{short_id}/
-            # Everything (json, html, png) goes directly into this flat folder.
+            plot_types = config.plot_types if config else ["time_series", "histogram"]
+            vis_enabled = config.visualizations_enabled if config else True
+            runs_dir = config.result_base_dir if config else "results/runs"
             
             timestamps = []
             values = []
             for i, m in enumerate(result.measurements):
                 if m.success and m.value is not None:
-                    timestamps.append(i) # using index as simplified time axis
+                    timestamps.append(i)
                     values.append(m.value)
-                    
-            time_series_path = os.path.join(target_dir, "time_series.png")
-            plt.figure(figsize=(8, 4))
-            plt.plot(timestamps, values, marker='o', linestyle='-', color='#007acc', linewidth=2)
-            plt.title(f"{result.ammeter_type.upper()} - Current over Time", fontsize=14)
-            plt.xlabel("Sample Index", fontsize=12)
-            plt.ylabel("Current (A)", fontsize=12)
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            plt.savefig(time_series_path)
-            plt.close()
             
-            hist_path = os.path.join(target_dir, "histogram.png")
-            plt.figure(figsize=(8, 4))
-            plt.hist(values, bins=10, color='#28a745', edgecolor='black', alpha=0.7)
-            plt.title(f"{result.ammeter_type.upper()} - Value Distribution", fontsize=14)
-            plt.xlabel("Current (A)", fontsize=12)
-            plt.ylabel("Frequency", fontsize=12)
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            plt.savefig(hist_path)
-            plt.close()
+            # Only generate plots if visualizations are enabled
+            if vis_enabled and values:
+                if "time_series" in plot_types:
+                    time_series_path = os.path.join(target_dir, "time_series.png")
+                    plt.figure(figsize=(8, 4))
+                    plt.plot(timestamps, values, marker='o', linestyle='-', color='#007acc', linewidth=2)
+                    plt.title(f"{result.ammeter_type.upper()} - Current over Time", fontsize=14)
+                    plt.xlabel("Sample Index", fontsize=12)
+                    plt.ylabel("Current (A)", fontsize=12)
+                    plt.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    plt.savefig(time_series_path)
+                    plt.close()
+                    
+                if "histogram" in plot_types:
+                    hist_path = os.path.join(target_dir, "histogram.png")
+                    plt.figure(figsize=(8, 4))
+                    plt.hist(values, bins=10, color='#28a745', edgecolor='black', alpha=0.7)
+                    plt.title(f"{result.ammeter_type.upper()} - Value Distribution", fontsize=14)
+                    plt.xlabel("Current (A)", fontsize=12)
+                    plt.ylabel("Frequency", fontsize=12)
+                    plt.grid(True, linestyle='--', alpha=0.7)
+                    plt.tight_layout()
+                    plt.savefig(hist_path)
+                    plt.close()
             
             html_path = os.path.join(target_dir, "report.html")
             stats = result.statistics
@@ -69,8 +74,6 @@ class DashboardGenerator:
             # Calculate relative path to project root
             root_path = "../../../../index.html"
             
-            # We need to overwrite the template slightly to point to the correct image paths
-            # Since images are now in the same directory, we don't use graphs/time...
             custom_report = REPORT_TEMPLATE.replace("graphs/time_{test_id}.png", "time_series.png")
             custom_report = custom_report.replace("graphs/hist_{test_id}.png", "histogram.png")
             
@@ -98,7 +101,7 @@ class DashboardGenerator:
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
                 
-            DashboardGenerator.generate_global_dashboard()
+            DashboardGenerator.generate_global_dashboard(config)
             return html_path
             
         except Exception as e:
@@ -106,10 +109,13 @@ class DashboardGenerator:
             return ""
 
     @staticmethod
-    def generate_global_dashboard():
+    def generate_global_dashboard(config: Optional[Configuration] = None):
         try:
+            plot_types = config.plot_types if config else ["global_pie_chart", "global_bar_chart"]
+            vis_enabled = config.visualizations_enabled if config else True
+            runs_dir = config.result_base_dir if config else "results/runs"
+            
             index_path = "index.html"
-            runs_dir = "results/runs"
             consistency = ConsistencyAnalyzer.analyze_history(runs_dir)
             
             runs_data = []
@@ -141,43 +147,43 @@ class DashboardGenerator:
             runs_data.sort(key=lambda x: x['timestamp'], reverse=True)
             
             # --- Generate Global Graphs ---
-            global_graphs_dir = "results/global_graphs"
+            global_graphs_dir = os.path.join(os.path.dirname(runs_dir), "global_graphs")
             os.makedirs(global_graphs_dir, exist_ok=True)
             
             has_graphs = False
-            if runs_data:
+            if runs_data and vis_enabled:
                 has_graphs = True
                 
-                # 1. Status Distribution (Pie Chart)
-                statuses = [r['status'] for r in runs_data]
-                status_counts = {s: statuses.count(s) for s in set(statuses)}
-                plt.figure(figsize=(6, 4))
-                colors = {'PASS': '#28a745', 'FAIL': '#dc3545', 'ERROR': '#ffc107'}
-                pie_colors = [colors.get(s, '#6c757d') for s in status_counts.keys()]
-                plt.pie(status_counts.values(), labels=status_counts.keys(), colors=pie_colors, autopct='%1.1f%%', startangle=90)
-                plt.title("Overall Run Status Distribution")
-                plt.tight_layout()
-                plt.savefig(os.path.join(global_graphs_dir, "status_pie.png"))
-                plt.close()
+                if "global_pie_chart" in plot_types:
+                    statuses = [r['status'] for r in runs_data]
+                    status_counts = {s: statuses.count(s) for s in set(statuses)}
+                    plt.figure(figsize=(6, 4))
+                    colors = {'PASS': '#28a745', 'FAIL': '#dc3545', 'ERROR': '#ffc107'}
+                    pie_colors = [colors.get(s, '#6c757d') for s in status_counts.keys()]
+                    plt.pie(status_counts.values(), labels=status_counts.keys(), colors=pie_colors, autopct='%1.1f%%', startangle=90)
+                    plt.title("Overall Run Status Distribution")
+                    plt.tight_layout()
+                    plt.savefig(os.path.join(global_graphs_dir, "status_pie.png"))
+                    plt.close()
                 
-                # 2. Pass Rate by Ammeter Type (Bar Chart)
-                ammeter_types = list(set([r['ammeter_type'] for r in runs_data]))
-                pass_rates = []
-                for am in ammeter_types:
-                    am_runs = [r for r in runs_data if r['ammeter_type'] == am]
-                    passed = len([r for r in am_runs if r['status'] == 'PASS'])
-                    pass_rates.append((passed / len(am_runs)) * 100 if len(am_runs) > 0 else 0)
-                    
-                plt.figure(figsize=(6, 4))
-                bars = plt.bar(ammeter_types, pass_rates, color='#007acc')
-                plt.title("Pass Rate by Ammeter Type (%)")
-                plt.ylim(0, 110)
-                for bar in bars:
-                    yval = bar.get_height()
-                    plt.text(bar.get_x() + bar.get_width()/2.0, yval + 1, f'{yval:.1f}%', ha='center', va='bottom')
-                plt.tight_layout()
-                plt.savefig(os.path.join(global_graphs_dir, "ammeter_pass_rates.png"))
-                plt.close()
+                if "global_bar_chart" in plot_types:
+                    ammeter_types = list(set([r['ammeter_type'] for r in runs_data]))
+                    pass_rates = []
+                    for am in ammeter_types:
+                        am_runs = [r for r in runs_data if r['ammeter_type'] == am]
+                        passed = len([r for r in am_runs if r['status'] == 'PASS'])
+                        pass_rates.append((passed / len(am_runs)) * 100 if len(am_runs) > 0 else 0)
+                        
+                    plt.figure(figsize=(6, 4))
+                    bars = plt.bar(ammeter_types, pass_rates, color='#007acc')
+                    plt.title("Pass Rate by Ammeter Type (%)")
+                    plt.ylim(0, 110)
+                    for bar in bars:
+                        yval = bar.get_height()
+                        plt.text(bar.get_x() + bar.get_width()/2.0, yval + 1, f'{yval:.1f}%', ha='center', va='bottom')
+                    plt.tight_layout()
+                    plt.savefig(os.path.join(global_graphs_dir, "ammeter_pass_rates.png"))
+                    plt.close()
                 
             graphs_html = ""
             if has_graphs:
@@ -185,15 +191,13 @@ class DashboardGenerator:
                 <h2>Global Statistics</h2>
                 <div class="global-stats">
                     <div class="graph-card">
-                        <img src="results/global_graphs/status_pie.png" alt="Status Distribution">
+                        <img src="{global_graphs_dir.replace(chr(92), '/')}/status_pie.png" alt="Status Distribution">
                     </div>
                     <div class="graph-card">
-                        <img src="results/global_graphs/ammeter_pass_rates.png" alt="Pass Rates">
+                        <img src="{global_graphs_dir.replace(chr(92), '/')}/ammeter_pass_rates.png" alt="Pass Rates">
                     </div>
                 </div>
                 """
-            
-            # --- End Global Graphs ---
             
             consistency_html = ""
             for ammeter, cons in consistency.items():

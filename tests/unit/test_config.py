@@ -74,3 +74,33 @@ def test_load_config_with_ammeters(tmp_path):
     assert "test_ammeter" in config.ammeters_config
     assert config.ammeters_config["test_ammeter"]["port"] == 9999
     assert config.ammeters_config["test_ammeter"]["command"] == "TEST_CMD"
+
+def test_load_config_full_yaml(tmp_path):
+    path = tmp_path / "config.yaml"
+    yaml_content = """
+    testing:
+      sampling:
+        sampling_frequency_hz: 5
+        measurements_count: 10
+    ammeters:
+      greenlee:
+        port: 5000
+        command: "MEASURE_GREENLEE -get_measurement"
+    analysis:
+      statistical_metrics:
+        - "mean"
+        - "min"
+      visualization:
+        enabled: false
+        plot_types:
+          - "time_series"
+    result_management:
+      base_dir: "custom/output"
+    """
+    path.write_text(yaml_content)
+    config = load_config(str(path))
+    assert config.metrics == ["mean", "min"]
+    assert config.visualizations_enabled is False
+    assert config.plot_types == ["time_series"]
+    assert config.result_base_dir == "custom/output"
+

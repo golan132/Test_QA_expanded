@@ -6,6 +6,7 @@ from typing import List, Dict, Optional
 from src.testing.types import TestRunResult, MeasurementResult
 from src.testing.constants import MODE_COUNT, MODE_DURATION
 from src.testing.ammeter_factory import AmmeterFactory
+from src.testing.analysis_engine import AnalysisEngine
 from src.utils.config import load_config
 
 class AmmeterTestFramework:
@@ -40,6 +41,9 @@ class AmmeterTestFramework:
         successful = sum(1 for r in results if r.success)
         failed = expected_samples - successful
         
+        # Phase 6: Statistical Analysis
+        stats = AnalysisEngine.analyze(results)
+        
         return TestRunResult(
             test_id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -51,6 +55,6 @@ class AmmeterTestFramework:
             successful_samples=successful,
             failed_samples=failed,
             measurements=results,
-            statistics={}, # to be calculated in Phase 6
+            statistics=stats,
             errors=[] # to be calculated in Phase 8
         )

@@ -14,10 +14,9 @@ def get_ammeter_ports():
     try:
         if os.path.exists("config/config.yaml"):
             with open("config/config.yaml", "r", encoding="utf-8") as f:
-                ammeters = (yaml.safe_load(f) or {}).get("ammeters") or {}
-                for key, val in ammeters.items():
-                    if isinstance(val, dict) and val.get("port"):
-                        ports[key] = val["port"]
+                ammeters = yaml.safe_load(f).get("ammeters", {})
+                for name in ports:
+                    ports[name] = ammeters.get(name, {}).get("port", ports[name])
     except Exception as e:
         print(f"Failed to load ports from config, using defaults: {e}")
     return ports

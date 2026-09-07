@@ -1,10 +1,19 @@
 import os
+import json
 import matplotlib
 matplotlib.use('Agg') # Headless backend
 import matplotlib.pyplot as plt
+from datetime import datetime
 from typing import List
 from src.testing.types import TestRunResult
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
+
+def format_timestamp(ts: str) -> str:
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
+        return dt.strftime("%d/%m/%Y %H:%M:%S")
+    except Exception:
+        return ts
 
 class DashboardGenerator:
     @staticmethod
@@ -13,7 +22,6 @@ class DashboardGenerator:
         graphs_dir = os.path.join(base_dir, "graphs")
         os.makedirs(graphs_dir, exist_ok=True)
         
-        # Data preparation
         timestamps = []
         values = []
         for i, m in enumerate(result.measurements):
@@ -21,7 +29,6 @@ class DashboardGenerator:
                 timestamps.append(i) # using index as simplified time axis
                 values.append(m.value)
                 
-        # Generate Time Series Graph
         time_series_path = os.path.join(graphs_dir, f"time_{result.test_id}.png")
         plt.figure(figsize=(8, 4))
         plt.plot(timestamps, values, marker='o', linestyle='-', color='#007acc', linewidth=2)
@@ -33,7 +40,6 @@ class DashboardGenerator:
         plt.savefig(time_series_path)
         plt.close()
         
-        # Generate Histogram Graph
         hist_path = os.path.join(graphs_dir, f"hist_{result.test_id}.png")
         plt.figure(figsize=(8, 4))
         plt.hist(values, bins=10, color='#28a745', edgecolor='black', alpha=0.7)
@@ -45,15 +51,16 @@ class DashboardGenerator:
         plt.savefig(hist_path)
         plt.close()
         
-        # Generate HTML
         html_path = os.path.join(base_dir, f"run_{result.test_id}.html")
         stats = result.statistics
+        formatted_time = format_timestamp(result.timestamp)
         
         errors_html = ""
         if result.errors:
             errors_html = "<div class='errors'><h2>Errors</h2><ul>"
             for e in result.errors[:10]:
-                errors_html += f"<li>[{e.get('timestamp')}] <strong>{e.get('error_type')}</strong>: {e.get('error_message')}</li>"
+                err_time = format_timestamp(e.get('timestamp', ''))
+                errors_html += f"<li>[{err_time}] <strong>{e.get('error_type')}</strong>: {e.get('error_message')}</li>"
             if len(result.errors) > 10:
                 errors_html += f"<li>... and {len(result.errors) - 10} more.</li>"
             errors_html += "</ul></div>"
@@ -94,7 +101,7 @@ class DashboardGenerator:
                         <h1>{result.ammeter_type.upper()} Report</h1>
                         <div class="meta-info">
                             <p><strong>Test ID:</strong> {result.test_id}</p>
-                            <p><strong>Timestamp:</strong> {result.timestamp}</p>
+                            <p><strong>Timestamp:</strong> {formatted_time}</p>
                         </div>
                     </div>
                     <div class="status {result.status.lower()}">{result.status}</div>
@@ -165,14 +172,30 @@ class DashboardGenerator:
     @staticmethod
     def generate_global_dashboard(base_dir: str = "results/dashboards"):
         index_path = os.path.join(base_dir, "index.html")
-        consistency = ConsistencyAnalyzer.analyze_history("results/data")
+        data_dir = "results/data"
+        consistency = ConsistencyAnalyzer.analyze_history(data_dir)
         
-        runs = []
-        for file in os.listdir(base_dir):
-            if file.startswith("run_") and file.endswith(".html"):
-                runs.append(file)
-                
-        runs.sort(reverse=True)
+        runs_data = []
+        if os.path.exists(data_dir):
+            for file in os.listdir(data_dir):
+                if file.endswith(".json"):
+                    try:
+                        with open(os.path.join(data_dir, file), 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            runs_data.append({
+                                'test_id': data.get('test_id'),
+                                'timestamp': data.get('timestamp', ''),
+                                'formatted_time': format_timestamp(data.get('timestamp', '')),
+                                'ammeter_type': data.get('ammeter_type', 'unknown').upper(),
+                                'status': data.get('status', 'ERROR'),
+                                'successful': data.get('successful_samples', 0),
+                                'expected': data.get('expected_samples', 0),
+                                'link': f"run_{data.get('test_id')}.html"
+                            })
+                    except Exception:
+                        pass
+        
+        runs_data.sort(key=lambda x: x['timestamp'], reverse=True)
         
         consistency_html = ""
         for ammeter, cons in consistency.items():
@@ -186,8 +209,21 @@ class DashboardGenerator:
             """
             
         runs_html = ""
-        for r in runs:
-            runs_html += f"<li><a href='{r}'><svg width='16' height='16' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'><path d='M9 18l6-6-6-6'></path></svg> {r}</a></li>"
+        for r in runs_data:
+            status_class = r['status'].lower()
+            runs_html += f"""
+            <a href="{r['link']}" class="run-card">
+                <div class="run-header">
+                    <span class="run-title">{r['ammeter_type']}</span>
+                    <span class="status-badge {status_class}">{r['status']}</span>
+                </div>
+                <div class="run-details">
+                    <span>📅 {r['formatted_time']}</span>
+                    <span>📊 {r['successful']} / {r['expected']} Samples</span>
+                    <span class="run-id">ID: {r['test_id'][:8]}...</span>
+                </div>
+            </a>
+            """
             
         html_content = f"""
         <!DOCTYPE html>
@@ -204,11 +240,18 @@ class DashboardGenerator:
                 th, td {{ padding: 15px; border: 1px solid #dee2e6; text-align: left; }}
                 th {{ background-color: #f1f3f5; font-weight: 600; color: #495057; }}
                 tr:hover {{ background-color: #f8f9fa; }}
-                .runs-list {{ list-style: none; padding: 0; }}
-                .runs-list li {{ padding: 15px; border: 1px solid #dee2e6; margin-bottom: 10px; border-radius: 8px; transition: transform 0.2s, box-shadow 0.2s; background: #fff; }}
-                .runs-list li:hover {{ transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); border-color: #007acc; }}
-                .runs-list a {{ text-decoration: none; color: #007acc; display: flex; align-items: center; font-weight: 500; font-size: 16px; width: 100%; }}
-                .runs-list svg {{ margin-right: 10px; }}
+                
+                .runs-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }}
+                .run-card {{ display: block; background: #ffffff; border: 1px solid #dee2e6; border-radius: 10px; padding: 20px; text-decoration: none; color: inherit; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }}
+                .run-card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.08); border-color: #007acc; }}
+                .run-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }}
+                .run-title {{ font-size: 18px; font-weight: bold; color: #2c3e50; }}
+                .status-badge {{ padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }}
+                .status-badge.pass {{ background-color: #d1e7dd; color: #0f5132; }}
+                .status-badge.fail {{ background-color: #f8d7da; color: #842029; }}
+                .status-badge.error {{ background-color: #fff3cd; color: #664d03; }}
+                .run-details {{ display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #6c757d; }}
+                .run-id {{ font-family: monospace; color: #adb5bd; font-size: 12px; }}
             </style>
         </head>
         <body>
@@ -230,9 +273,9 @@ class DashboardGenerator:
                 </table>
                 
                 <h2>Recent Test Runs</h2>
-                <ul class="runs-list">
+                <div class="runs-grid">
                     {runs_html}
-                </ul>
+                </div>
             </div>
         </body>
         </html>

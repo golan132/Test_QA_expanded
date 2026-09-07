@@ -12,8 +12,12 @@ def load_config(config_path: str) -> Configuration:
     Enforces that either count OR duration is provided, not both.
     Supports 'null' or missing values by falling back to robust defaults.
     """
-    with open(config_path, 'r', encoding='utf-8') as f:
-        data = yaml.safe_load(f) or {}
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f) or {}
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        print(f"Warning: Failed to load config from {config_path} ({e}). Using robust defaults.")
+        data = {}
     
     sampling = data.get("testing", {}).get("sampling", {})
     if sampling is None:

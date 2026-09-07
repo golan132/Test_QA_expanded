@@ -45,6 +45,20 @@ def test_framework_runs_deterministically(mock_get_client, mock_config):
     assert result.statistics["min"] == 5.0
     assert result.statistics["max"] == 6.0
     
-    # Check errors
     assert len(result.errors) == 1
     assert result.errors[0]["error_type"] == "TimeoutError"
+
+@patch("src.testing.test_framework.AmmeterFactory.get_client")
+def test_framework_catches_fatal_error(mock_get_client, mock_config):
+    # Setup mock client to throw an unhandled exception
+    mock_get_client.side_effect = Exception("Simulated fatal factory failure")
+    
+    framework = AmmeterTestFramework(config_path=mock_config)
+    result = framework.run_test("circutor")
+    
+    # Assert that instead of crashing, it gracefully returns an ERROR result
+    assert result.status == "ERROR"
+    assert result.expected_samples == 0
+    assert len(result.errors) == 1
+    assert result.errors[0]["error_type"] == "FatalFrameworkError"
+    assert "Simulated fatal factory failure" in result.errors[0]["error_message"]

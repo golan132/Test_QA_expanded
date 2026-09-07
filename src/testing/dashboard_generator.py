@@ -211,18 +211,17 @@ class DashboardGenerator:
         runs_html = ""
         for r in runs_data:
             status_class = r['status'].lower()
+            pass_rate = f"{(r['successful'] / r['expected'] * 100):.1f}%" if r['expected'] > 0 else "0%"
             runs_html += f"""
-            <a href="{r['link']}" class="run-card">
-                <div class="run-header">
-                    <span class="run-title">{r['ammeter_type']}</span>
-                    <span class="status-badge {status_class}">{r['status']}</span>
-                </div>
-                <div class="run-details">
-                    <span>📅 {r['formatted_time']}</span>
-                    <span>📊 {r['successful']} / {r['expected']} Samples</span>
-                    <span class="run-id">ID: {r['test_id'][:8]}...</span>
-                </div>
-            </a>
+            <tr>
+                <td>{r['formatted_time']}</td>
+                <td><strong>{r['ammeter_type']}</strong></td>
+                <td>{r['expected']}</td>
+                <td>{r['successful']}</td>
+                <td>{pass_rate}</td>
+                <td><span class="status-badge {status_class}">{r['status']}</span></td>
+                <td><a href="{r['link']}" class="view-link">View Report</a></td>
+            </tr>
             """
             
         html_content = f"""
@@ -233,49 +232,62 @@ class DashboardGenerator:
             <title>Global Ammeter Dashboard</title>
             <style>
                 body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #212529; margin: 0; padding: 40px; }}
-                h1, h2 {{ color: #343a40; }}
-                .container {{ max-width: 1100px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }}
-                .header {{ border-bottom: 1px solid #dee2e6; padding-bottom: 20px; margin-bottom: 30px; }}
-                table {{ width: 100%; border-collapse: collapse; margin-bottom: 40px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }}
-                th, td {{ padding: 15px; border: 1px solid #dee2e6; text-align: left; }}
-                th {{ background-color: #f1f3f5; font-weight: 600; color: #495057; }}
-                tr:hover {{ background-color: #f8f9fa; }}
+                h1, h2 {{ color: #343a40; margin-bottom: 20px; }}
+                .container {{ max-width: 1100px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #dee2e6; }}
+                .header {{ border-bottom: 2px solid #343a40; padding-bottom: 10px; margin-bottom: 30px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 50px; font-size: 14px; }}
+                th, td {{ padding: 12px 15px; border: 1px solid #dee2e6; text-align: left; }}
+                th {{ background-color: #e9ecef; font-weight: 600; color: #495057; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }}
+                tr:hover {{ background-color: #f1f3f5; }}
                 
-                .runs-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }}
-                .run-card {{ display: block; background: #ffffff; border: 1px solid #dee2e6; border-radius: 10px; padding: 20px; text-decoration: none; color: inherit; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }}
-                .run-card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.08); border-color: #007acc; }}
-                .run-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }}
-                .run-title {{ font-size: 18px; font-weight: bold; color: #2c3e50; }}
-                .status-badge {{ padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }}
-                .status-badge.pass {{ background-color: #d1e7dd; color: #0f5132; }}
-                .status-badge.fail {{ background-color: #f8d7da; color: #842029; }}
-                .status-badge.error {{ background-color: #fff3cd; color: #664d03; }}
-                .run-details {{ display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #6c757d; }}
-                .run-id {{ font-family: monospace; color: #adb5bd; font-size: 12px; }}
+                .status-badge {{ padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; display: inline-block; text-align: center; min-width: 60px; }}
+                .status-badge.pass {{ background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }}
+                .status-badge.fail {{ background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }}
+                .status-badge.error {{ background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }}
+                
+                .view-link {{ color: #0d6efd; text-decoration: none; font-weight: 500; }}
+                .view-link:hover {{ text-decoration: underline; color: #0a58ca; }}
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Global Ammeter Testing Dashboard</h1>
-                    <p style="color: #6c757d;">Automated testing framework history and consistency tracking.</p>
+                    <h1>Test QA Framework - Global Dashboard</h1>
+                    <p style="color: #6c757d; font-size: 14px;">Automated measurement history and consistency tracking.</p>
                 </div>
                 
                 <h2>Relative Consistency Analysis</h2>
                 <table>
-                    <tr>
-                        <th>Ammeter Type</th>
-                        <th>Historical Runs</th>
-                        <th>Mean of Means (A)</th>
-                        <th>Std Dev of Means (A)</th>
-                    </tr>
-                    {consistency_html}
+                    <thead>
+                        <tr>
+                            <th>Ammeter Type</th>
+                            <th>Historical Runs</th>
+                            <th>Mean of Means (A)</th>
+                            <th>Std Dev of Means (A)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {consistency_html}
+                    </tbody>
                 </table>
                 
-                <h2>Recent Test Runs</h2>
-                <div class="runs-grid">
-                    {runs_html}
-                </div>
+                <h2>Recent Execution History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Ammeter Type</th>
+                            <th>Expected Samples</th>
+                            <th>Successful Samples</th>
+                            <th>Pass Rate</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {runs_html}
+                    </tbody>
+                </table>
             </div>
         </body>
         </html>

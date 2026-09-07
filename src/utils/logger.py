@@ -9,19 +9,25 @@ class TestLogger:
 
     def _setup_logger(self) -> logging.Logger:
         """
-        הגדרת הלוגר עם פורמט מותאם וכתיבה לקובץ
+        Set up the logger with custom format and file writing
         """
-        # יצירת תיקיית הלוגים
+        # Create log directory
         log_dir = "results/logs"
         os.makedirs(log_dir, exist_ok=True)
 
-        # הגדרת שם הקובץ עם תאריך ומזהה הבדיקה
+        # Set file name with timestamp and test name
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = f"{log_dir}/{timestamp}_{self._test_name}.log"
 
-        # הגדרת הלוגר
+        # Setup logger
         logger = logging.getLogger(f"test_{self._test_name}")
-
+        logger.setLevel(logging.DEBUG)
+        
+        # Add file handler
+        file_handler = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
         return logger
 

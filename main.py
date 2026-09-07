@@ -1,5 +1,7 @@
 import threading
 import time
+import yaml
+import os
 
 from Ammeters.Circutor_Ammeter import CircutorAmmeter
 from Ammeters.Entes_Ammeter import EntesAmmeter
@@ -7,31 +9,53 @@ from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
 from Ammeters.client import request_current_from_ammeter
 
 
-def run_greenlee_emulator():
-    greenlee = GreenleeAmmeter(5001)
+def get_ammeter_ports():
+    ports = {"greenlee": 5000, "entes": 5001, "circutor": 5002}
+    try:
+        if os.path.exists("config/config.yaml"):
+            with open("config/config.yaml", "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+                ammeters = config.get("ammeters")
+                if ammeters:
+                    if ammeters.get("greenlee") and ammeters["greenlee"].get("port"):
+                        ports["greenlee"] = ammeters["greenlee"]["port"]
+                    if ammeters.get("entes") and ammeters["entes"].get("port"):
+                        ports["entes"] = ammeters["entes"]["port"]
+                    if ammeters.get("circutor") and ammeters["circutor"].get("port"):
+                        ports["circutor"] = ammeters["circutor"]["port"]
+    except Exception as e:
+        print(f"Failed to load ports from config, using defaults: {e}")
+    return ports
+
+
+def run_greenlee_emulator(port):
+    greenlee = GreenleeAmmeter(port)
     greenlee.start_server()
 
-def run_entes_emulator():
-    entes = EntesAmmeter(5002)
+def run_entes_emulator(port):
+    entes = EntesAmmeter(port)
     entes.start_server()
 
-def run_circutor_emulator():
-    circutor = CircutorAmmeter(5003)
+def run_circutor_emulator(port):
+    circutor = CircutorAmmeter(port)
     circutor.start_server()
 
 if __name__ == "__main__":
+    ports = get_ammeter_ports()
+    
     # Start each ammeter in a separate thread
-    threading.Thread(target=run_greenlee_emulator, daemon=True).start()
-    threading.Thread(target=run_entes_emulator, daemon=True).start()
-    threading.Thread(target=run_circutor_emulator, daemon=True).start()
+    threading.Thread(target=run_greenlee_emulator, args=(ports["greenlee"],), daemon=True).start()
+    threading.Thread(target=run_entes_emulator, args=(ports["entes"],), daemon=True).start()
+    threading.Thread(target=run_circutor_emulator, args=(ports["circutor"],), daemon=True).start()
 
-    # This section is commented out because it shouldn't work.
-    # Read the README.md file as well as the source code if you need, and fix the problem.
-
-    # Wait for the servers to start, if you have problem restarting the servers between runs try increasing sleep time.
+    # Wait for the servers to start
     time.sleep(5)
-    # request_current_from_ammeter(5001, b'MEASURE_GREENLEE')  # Request from Greenlee Ammeter
-    # request_current_from_ammeter(5002, b'MEASURE_ENTES')  # Request from ENTES Ammeter
-    # request_current_from_ammeter(5003, b'MEASURE_CIRCUTOR')  # Request from CIRCUTOR Ammeter
-
-    pass
+    
+    # Request from Greenlee Ammeter
+    request_current_from_ammeter(ports["greenlee"], b'MEASURE_GREENLEE -get_measurement')
+    
+    # Request from ENTES Ammeter
+    request_current_from_ammeter(ports["entes"], b'MEASURE_ENTES -get_data')
+    
+    # Request from CIRCUTOR Ammeter
+    request_current_from_ammeter(ports["circutor"], b'MEASURE_CIRCUTOR -get_measurement')

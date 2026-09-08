@@ -24,6 +24,24 @@ class MeasurementResult:
     error_type: Optional[str] = None
     error_message: Optional[str] = None
 
+    @classmethod
+    def create_failure(cls, timestamp: str, error_type: str, error_message: str) -> "MeasurementResult":
+        return cls(
+            timestamp=timestamp,
+            value=None,
+            success=False,
+            error_type=error_type,
+            error_message=error_message,
+        )
+
+    @classmethod
+    def create_success(cls, timestamp: str, value: float) -> "MeasurementResult":
+        return cls(
+            timestamp=timestamp,
+            value=value,
+            success=True,
+        )
+
 
 @dataclass
 class TestRunResult:

@@ -1,7 +1,7 @@
 import time
 import os
 import uuid
-from datetime import datetime, timezone
+from src.utils.Utils import get_current_timestamp
 from typing import List
 
 from src.testing.types import TestRunResult, MeasurementResult
@@ -21,7 +21,7 @@ class AmmeterTestFramework:
 
         # Generate a single session folder for this execution.
         # All ammeter tests within this run share this folder.
-        session_timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        session_timestamp = get_current_timestamp().replace(":", "")
         self.session_dir = os.path.join(self.config.result_base_dir, session_timestamp)
 
     def run_test(self, ammeter_type: str) -> TestRunResult:
@@ -72,7 +72,7 @@ class AmmeterTestFramework:
 
             run_result = TestRunResult(
                 test_id=str(uuid.uuid4()),
-                timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                timestamp=get_current_timestamp(),
                 ammeter_type=ammeter_type,
                 status="PENDING",  # to be calculated below
                 configuration=self.config,
@@ -111,7 +111,7 @@ class AmmeterTestFramework:
             # Construct an ERROR result so it's not silently lost
             error_result = TestRunResult(
                 test_id=str(uuid.uuid4()),
-                timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                timestamp=get_current_timestamp(),
                 ammeter_type=ammeter_type,
                 status="ERROR",
                 configuration=self.config,
@@ -123,9 +123,7 @@ class AmmeterTestFramework:
                 statistics={m: None for m in self.config.metrics},
                 errors=[
                     {
-                        "timestamp": datetime.now(timezone.utc).strftime(
-                            "%Y-%m-%dT%H:%M:%SZ"
-                        ),
+                        "timestamp": get_current_timestamp(),
                         "error_type": "FatalFrameworkError",
                         "error_message": str(e),
                     }

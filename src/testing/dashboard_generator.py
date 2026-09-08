@@ -1,17 +1,10 @@
 import os
 import json
-from datetime import datetime
 from typing import Optional
 from src.testing.types import TestRunResult, Configuration
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
+from src.utils.Utils import parse_timestamp
 
-
-def format_timestamp(ts: str) -> str:
-    try:
-        dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
-        return dt.strftime("%d/%m/%Y %H:%M:%S")
-    except Exception:
-        return ts
 
 
 class DashboardGenerator:
@@ -20,18 +13,6 @@ class DashboardGenerator:
         result: TestRunResult, target_dir: str, config: Optional[Configuration] = None
     ) -> str:
         try:
-            config.result_base_dir if config else "results/runs"
-
-            timestamps = []
-            values = []
-            for i, m in enumerate(result.measurements):
-                if m.success and m.value is not None:
-                    timestamps.append(i)
-                    values.append(m.value)
-
-            # Visualizations are now handled client-side using Chart.js
-
-            # Removed individual report.html generation to support SPA dashboard architecture
 
             DashboardGenerator.generate_global_dashboard(config)
             return target_dir
@@ -60,9 +41,11 @@ class DashboardGenerator:
                                     data = json.load(f)
                                     # Capture the whole data to use in SPA
                                     run_obj = data
-                                    run_obj["formatted_time"] = format_timestamp(
-                                        data.get("timestamp", "")
-                                    )
+                                    ts_raw = data.get("timestamp", "")
+                                    try:
+                                        run_obj["formatted_time"] = parse_timestamp(ts_raw).strftime("%d/%m/%Y %H:%M:%S")
+                                    except Exception:
+                                        run_obj["formatted_time"] = ts_raw
 
                                     # Calculate relative run directory for loading graphs
                                     html_rel_path = root.replace(chr(92), "/")
@@ -73,8 +56,6 @@ class DashboardGenerator:
                                 pass
 
             runs_data.sort(key=lambda x: x["timestamp"], reverse=True)
-
-            # Global graphs are now handled client-side by Chart.js
 
             consistency_html = ""
             for ammeter, cons in consistency.items():

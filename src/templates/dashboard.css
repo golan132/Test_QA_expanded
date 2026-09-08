@@ -1,0 +1,44 @@
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #212529; margin: 0; padding: 0; padding-top: 80px; }
+        h1, h2, h3 { color: #343a40; margin-bottom: 20px; }
+        
+        /* Navbar */
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background-color: #1a1d23; display: flex; align-items: center; padding: 0 40px; box-sizing: border-box; z-index: 50; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .navbar-brand { color: #fff; font-size: 18px; font-weight: bold; margin-right: 40px; }
+        .nav-btn { background: transparent; border: none; color: #9ca3af; font-size: 14px; padding: 10px 22px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; font-weight: 600; }
+        .nav-btn:hover { color: #fff; background-color: rgba(255,255,255,0.08); }
+        .nav-btn.active { color: #fff; background-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
+        
+        .tab-content { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; }
+        .tab-content.active { display: block; }
+        
+        .container { background: #fff; padding: 40px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); border: 1px solid #e5e7eb; margin-bottom: 30px; transition: box-shadow 0.25s ease; }
+        .container:hover { box-shadow: 0 12px 32px rgba(0,0,0,0.09); }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px; }
+        th, td { padding: 12px 15px; border: 1px solid #e5e7eb; text-align: left; }
+        th { background-color: #f9fafb; font-weight: 600; color: #495057; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; cursor: pointer; user-select: none; }
+        th:hover { background-color: #f3f4f6; }
+        tr:hover { background-color: #f9fafb; }
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; display: inline-block; text-align: center; min-width: 60px; }
+        .status-badge.pass { background-color: #d1fae5; color: #065f46; }
+        .status-badge.fail { background-color: #fee2e2; color: #991b1b; }
+        .status-badge.error { background-color: #fef3c7; color: #92400e; }
+        .status-badge.partial { background-color: #e0f2fe; color: #075985; }
+        
+        .view-link { color: #3b82f6; text-decoration: none; font-weight: 500; cursor: pointer; background: none; border: none; padding: 0; }
+        .view-link:hover { text-decoration: underline; color: #2563eb; }
+        .sort-icon { font-size: 14px; margin-left: 5px; color: #9ca3af; font-weight: bold; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
+        .graph-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 6px 18px rgba(0,0,0,0.04); position: relative; height: 350px; transition: box-shadow 0.25s ease, transform 0.25s ease; }
+        .graph-card:hover { box-shadow: 0 10px 28px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .home-graph { height: 240px; }
+        
+        /* Modal */
+        .detail-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 100; }
+        .detail-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); max-width: 1000px; width: 90%; max-height: 85vh; overflow-y: auto; z-index: 101; padding: 40px; }
+        .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb; }
+        .detail-close { background: #f3f4f6; border: none; font-size: 18px; cursor: pointer; padding: 6px 12px; border-radius: 8px; color: #6b7280; transition: 0.2s; }
+        .detail-close:hover { background-color: #e5e7eb; color: #111827; }
+        .full-width-graph { width: 100%; height: 300px; margin-top: 20px; }
+        .detail-errors { background-color: #fef2f2; padding: 20px; border-radius: 12px; border: 1px solid #fecaca; margin-top: 20px; }

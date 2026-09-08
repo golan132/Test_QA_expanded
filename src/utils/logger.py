@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+
 class TestLogger:
     def __init__(self, test_name: str):
         self._test_name = test_name
@@ -22,16 +23,18 @@ class TestLogger:
         # Setup logger
         logger = logging.getLogger(f"test_{self._test_name}")
         logger.setLevel(logging.DEBUG)
-        
+
         # Add file handler
         file_handler = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-        
+
         # Add stream handler to preserve console output
         stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(logging.Formatter('%(message)s'))
+        stream_handler.setFormatter(logging.Formatter("%(message)s"))
         logger.addHandler(stream_handler)
 
         return logger
@@ -46,4 +49,4 @@ class TestLogger:
         self.logger.debug(message)
 
     def warning(self, message: str):
-        self.logger.warning(message) 
+        self.logger.warning(message)

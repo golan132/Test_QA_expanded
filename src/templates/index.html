@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Global Ammeter Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+{css_content}
+</style>
+    <script>
+{js_content}
+</script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand">Test QA Framework</div>
+        <button id="btn-home" class="nav-btn active" onclick="switchTab('home')">Home</button>
+        <button id="btn-analytics" class="nav-btn" onclick="switchTab('analytics')">Full Dashboard</button>
+    </div>
+
+    <!-- Modal for Detailed Run Report -->
+    <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <div>
+                <h2 id="detailTitle" style="margin:0"></h2>
+                <p style="color:#6c757d;margin:5px 0"><strong>Test ID:</strong> <span id="detailTestId"></span></p>
+                <p style="color:#6c757d;margin:5px 0"><strong>Timestamp:</strong> <span id="detailTimestamp"></span></p>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px">
+                <span id="detailStatus" class="status-badge"></span>
+                <button class="detail-close" onclick="closeDetail()">&times;</button>
+            </div>
+        </div>
+        
+        <h3>Execution Summary</h3>
+        <table>
+            <tr><th>Mode</th><th>Frequency (Hz)</th><th>Expected</th><th>Attempted</th><th>Successful</th><th>Failed</th></tr>
+            <tr><td id="detailMode"></td><td id="detailFrequency"></td><td id="detailExpected"></td><td id="detailAttempted"></td><td id="detailSuccessful"></td><td id="detailFailed"></td></tr>
+        </table>
+        
+        <h3>Statistical Data</h3>
+        <table>
+            <tr><th>Mean (A)</th><th>Median (A)</th><th>Min (A)</th><th>Max (A)</th><th>Std Dev (A)</th></tr>
+            <tr><td id="detailMean"></td><td id="detailMedian"></td><td id="detailMin"></td><td id="detailMax"></td><td id="detailStdDev"></td></tr>
+        </table>
+        
+        <div class="grid-2">
+            <div class="graph-card"><canvas id="chartTimeSeries"></canvas></div>
+            <div class="graph-card"><canvas id="chartHistogram"></canvas></div>
+        </div>
+        <div class="graph-card full-width-graph">
+            <canvas id="chartStatusTimeline"></canvas>
+        </div>
+        
+        <div class="detail-errors" id="detailErrors"></div>
+    </div>
+
+    <!-- TAB: HOME -->
+    <div id="tab-home" class="tab-content active">
+        <div class="container">
+            <h2 style="margin-top:0">Global Statistics Overview</h2>
+            <div class="grid-2">
+                <div class="graph-card home-graph"><canvas id="globalPieChart"></canvas></div>
+                <div class="graph-card home-graph"><canvas id="globalBarChart"></canvas></div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h2 style="margin-top:0">Relative Consistency Analysis</h2>
+            <table id="consistencyTable">
+                <thead><tr>
+                    <th onclick="sortTable(0, 'consistencyTable')">Ammeter Type <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(1, 'consistencyTable')">Historical Runs <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(2, 'consistencyTable')">Mean of Means (A) <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(3, 'consistencyTable')">Std Dev of Means (A) <span class="sort-icon">&#8597;</span></th>
+                </tr></thead>
+                <tbody>{consistency_html}</tbody>
+            </table>
+        </div>
+        
+        <div class="container">
+            <h2 style="margin-top:0">Recent Execution History</h2>
+            <table id="runsTable">
+                <thead><tr>
+                    <th onclick="sortTable(0, 'runsTable')">Timestamp <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(1, 'runsTable')">Ammeter Type <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(2, 'runsTable')">Expected Samples <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(3, 'runsTable')">Successful Samples <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(4, 'runsTable')">Pass Rate <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(5, 'runsTable')">Status <span class="sort-icon">&#8597;</span></th>
+                    <th>Action</th>
+                </tr></thead>
+                <tbody>{runs_html}</tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB: FULL DASHBOARD (ANALYTICS) -->
+    <div id="tab-analytics" class="tab-content">
+        
+        {accuracy_assessment_html}
+
+        <div class="container" style="background:transparent; border:none; box-shadow:none; padding:0">
+            <div class="grid-2">
+                <div class="graph-card"><canvas id="chartPassRateTrend"></canvas></div>
+                <div class="graph-card"><canvas id="chartMeanStability"></canvas></div>
+                <div class="graph-card"><canvas id="chartErrorDist"></canvas></div>
+                <div class="graph-card"><canvas id="chartVolume"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

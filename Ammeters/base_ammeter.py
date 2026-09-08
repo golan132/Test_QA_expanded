@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 NotImplementedErrorMsg = "Subclasses must implement this property."
 
+
 class AmmeterEmulatorBase(ABC):
     def __init__(self, port: int):
         self.port = port
@@ -16,7 +17,7 @@ class AmmeterEmulatorBase(ABC):
         The server will run indefinitely, handling one client request at a time.
         """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('localhost', self.port))
+            s.bind(("localhost", self.port))
             s.listen()
             print(f"{self.__class__.__name__} is running on port {self.port}")
             while True:
@@ -27,7 +28,7 @@ class AmmeterEmulatorBase(ABC):
                     if data == self.get_current_command:
                         # Call the specific measure_current() method defined in subclasses
                         current = self.measure_current()
-                        conn.sendall(str(current).encode('utf-8'))
+                        conn.sendall(str(current).encode("utf-8"))
 
     @property
     @abstractmethod
@@ -45,4 +46,3 @@ class AmmeterEmulatorBase(ABC):
         logic for current measurement.
         """
         raise NotImplementedError(NotImplementedErrorMsg)
-

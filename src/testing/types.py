@@ -1,19 +1,29 @@
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
 
+
 @dataclass
 class Configuration:
-    mode: str
     sampling_frequency_hz: float
     timeout_seconds: float
     measurements_count: Optional[int] = None
     duration_seconds: Optional[float] = None
     acceptable_error_rate: float = 0.1
     ammeters_config: Dict[str, Dict[str, any]] = field(default_factory=dict)
-    metrics: List[str] = field(default_factory=lambda: ["mean", "median", "std_dev", "min", "max"])
+    metrics: List[str] = field(
+        default_factory=lambda: ["mean", "median", "std_dev", "min", "max"]
+    )
     visualizations_enabled: bool = True
-    plot_types: List[str] = field(default_factory=lambda: ["time_series", "histogram", "global_pie_chart", "global_bar_chart"])
+    plot_types: List[str] = field(
+        default_factory=lambda: [
+            "time_series",
+            "histogram",
+            "global_pie_chart",
+            "global_bar_chart",
+        ]
+    )
     result_base_dir: str = "results/runs"
+
 
 @dataclass
 class MeasurementResult:
@@ -22,6 +32,7 @@ class MeasurementResult:
     success: bool
     error_type: Optional[str] = None
     error_message: Optional[str] = None
+
 
 @dataclass
 class TestRunResult:

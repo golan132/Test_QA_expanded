@@ -1,7 +1,3 @@
-# Sampling Modes
-MODE_COUNT = "count"
-MODE_DURATION = "duration"
-
 # Test Statuses
 STATUS_PASS = "PASS"
 STATUS_PARTIAL = "PARTIAL"

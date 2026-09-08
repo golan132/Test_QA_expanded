@@ -3,7 +3,7 @@ import json
 from typing import Optional
 from src.testing.types import TestRunResult, Configuration
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
-from src.utils.Utils import format_timestamp_for_display
+from src.utils.Utils import parse_timestamp
 
 
 
@@ -42,7 +42,10 @@ class DashboardGenerator:
                                     # Capture the whole data to use in SPA
                                     run_obj = data
                                     ts_raw = data.get("timestamp", "")
-                                    run_obj["formatted_time"] = format_timestamp_for_display(ts_raw)
+                                    try:
+                                        run_obj["formatted_time"] = parse_timestamp(ts_raw).strftime("%d/%m/%Y %H:%M:%S")
+                                    except Exception:
+                                        run_obj["formatted_time"] = ts_raw
 
                                     # Calculate relative run directory for loading graphs
                                     html_rel_path = root.replace(chr(92), "/")

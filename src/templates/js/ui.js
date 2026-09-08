@@ -1,29 +1,31 @@
-function switchTab(tabId) {
-  document.querySelectorAll(".tab-content").forEach(function (el) {
+const switchTab = (tabId) => {
+  document.querySelectorAll(".tab-content").forEach((el) => {
     el.classList.remove("active");
   });
-  document.querySelectorAll(".nav-btn").forEach(function (el) {
+  document.querySelectorAll(".nav-btn").forEach((el) => {
     el.classList.remove("active");
   });
 
-  document.getElementById("tab-" + tabId).classList.add("active");
-  document.getElementById("btn-" + tabId).classList.add("active");
+  document.getElementById(`tab-${tabId}`).classList.add("active");
+  document.getElementById(`btn-${tabId}`).classList.add("active");
 
   if (tabId === "analytics" && analyticsCharts.length === 0) {
     initAnalyticsCharts();
   }
-}
+};
 
-function showDetail(index) {
-  var run = ALL_RUNS[index];
+const showDetail = (index) => {
+  const run = ALL_RUNS[index];
   if (!run) return;
-  document.getElementById("detailTitle").textContent =
-    run.ammeter_type.toUpperCase() + " Report";
+  
+  document.getElementById("detailTitle").textContent = `${run.ammeter_type.toUpperCase()} Report`;
   document.getElementById("detailTestId").textContent = run.test_id;
   document.getElementById("detailTimestamp").textContent = run.formatted_time;
-  var statusEl = document.getElementById("detailStatus");
+  
+  const statusEl = document.getElementById("detailStatus");
   statusEl.textContent = run.status;
-  statusEl.className = "status-badge " + run.status.toLowerCase();
+  statusEl.className = `status-badge ${run.status.toLowerCase()}`;
+  
   document.getElementById("detailMode").textContent = run.configuration
     ? run.configuration.mode.toUpperCase()
     : "N/A";
@@ -31,16 +33,13 @@ function showDetail(index) {
     ? run.configuration.sampling_frequency_hz
     : "N/A";
   document.getElementById("detailExpected").textContent = run.expected_samples;
-  document.getElementById("detailAttempted").textContent =
-    run.attempted_samples;
-  document.getElementById("detailSuccessful").textContent =
-    run.successful_samples;
+  document.getElementById("detailAttempted").textContent = run.attempted_samples;
+  document.getElementById("detailSuccessful").textContent = run.successful_samples;
   document.getElementById("detailFailed").textContent = run.failed_samples;
 
-  var stats = run.statistics || {};
-  var fmt = function (v) {
-    return v !== null && v !== undefined ? Number(v).toFixed(6) : "N/A";
-  };
+  const stats = run.statistics || {};
+  const fmt = (v) => (v !== null && v !== undefined ? Number(v).toFixed(6) : "N/A");
+  
   document.getElementById("detailMean").textContent = fmt(stats.mean);
   document.getElementById("detailMedian").textContent = fmt(stats.median);
   document.getElementById("detailMin").textContent = fmt(stats.min);
@@ -49,14 +48,14 @@ function showDetail(index) {
 
   destroyCharts(currentDetailCharts);
 
-  var validVals = [];
-  var timeSeriesLabels = [];
-  var timeSeriesData = [];
-  var statusTimelineData = [];
-  var statusColors = [];
+  const validVals = [];
+  const timeSeriesLabels = [];
+  const timeSeriesData = [];
+  const statusTimelineData = [];
+  const statusColors = [];
 
   if (run.measurements && run.measurements.length > 0) {
-    run.measurements.forEach(function (m, idx) {
+    run.measurements.forEach((m, idx) => {
       if (m.success && m.value !== null) {
         validVals.push(m.value);
         timeSeriesLabels.push(idx + 1);
@@ -69,10 +68,11 @@ function showDetail(index) {
       }
     });
 
-    var ctxTime = document.getElementById("chartTimeSeries").getContext("2d");
-    var gradTime = ctxTime.createLinearGradient(0, 0, 0, 250);
+    const ctxTime = document.getElementById("chartTimeSeries").getContext("2d");
+    const gradTime = ctxTime.createLinearGradient(0, 0, 0, 250);
     gradTime.addColorStop(0, "rgba(59, 130, 246, 0.25)");
     gradTime.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+    
     currentDetailCharts.push(
       new Chart(ctxTime, {
         type: "line",
@@ -92,28 +92,32 @@ function showDetail(index) {
             },
           ],
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { title: { display: true, text: "Current Over Time" } },
-          scales: {
-            y: { grid: { color: "#f3f4f6" } },
-            x: { grid: { display: false } },
-          },
-        },
-      }),
+        options: getChartOptions("Current Over Time"),
+      })
     );
 
-    var histChart = drawHistogram("chartHistogram", validVals);
+    const histChart = drawHistogram("chartHistogram", validVals);
     if (histChart) currentDetailCharts.push(histChart);
 
-    var allLabels = Array.from(
-      { length: run.measurements.length },
-      (_, i) => i + 1,
-    );
-    var ctxStatus = document
-      .getElementById("chartStatusTimeline")
-      .getContext("2d");
+    const allLabels = Array.from({ length: run.measurements.length }, (_, i) => i + 1);
+    const ctxStatus = document.getElementById("chartStatusTimeline").getContext("2d");
+    
+    const statusOptions = getChartOptions("Sample Status Timeline");
+    statusOptions.plugins.tooltip = {
+      callbacks: {
+        label: (c) => {
+          const m = run.measurements[c.dataIndex];
+          return m.success ? `PASS: ${m.value}A` : `FAIL: ${m.error_type || "Error"}`;
+        },
+      },
+    };
+    statusOptions.scales.y.min = 0;
+    statusOptions.scales.y.max = 1.2;
+    statusOptions.scales.y.ticks = {
+      stepSize: 1,
+      callback: (v) => (v === 1 ? "PASS" : v === 0 ? "FAIL" : ""),
+    };
+
     currentDetailCharts.push(
       new Chart(ctxStatus, {
         type: "bar",
@@ -128,50 +132,17 @@ function showDetail(index) {
             },
           ],
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: { display: true, text: "Sample Status Timeline" },
-            tooltip: {
-              callbacks: {
-                label: function (c) {
-                  var m = run.measurements[c.dataIndex];
-                  return m.success
-                    ? "PASS: " + m.value + "A"
-                    : "FAIL: " + (m.error_type || "Error");
-                },
-              },
-            },
-          },
-          scales: {
-            y: {
-              min: 0,
-              max: 1.2,
-              ticks: {
-                stepSize: 1,
-                callback: function (v) {
-                  return v === 1 ? "PASS" : v === 0 ? "FAIL" : "";
-                },
-              },
-            },
-          },
-        },
-      }),
+        options: statusOptions,
+      })
     );
   }
 
-  var errorsDiv = document.getElementById("detailErrors");
-  var errors = run.errors || [];
+  const errorsDiv = document.getElementById("detailErrors");
+  const errors = run.errors || [];
   if (errors.length > 0) {
-    var html = "<h3>Errors</h3><ul>";
-    for (var i = 0; i < errors.length; i++) {
-      html +=
-        "<li><strong>" +
-        (errors[i].error_type || "Unknown") +
-        "</strong>: " +
-        (errors[i].error_message || "") +
-        "</li>";
+    let html = "<h3>Errors</h3><ul>";
+    for (let i = 0; i < errors.length; i++) {
+      html += `<li><strong>${errors[i].error_type || "Unknown"}</strong>: ${errors[i].error_message || ""}</li>`;
     }
     html += "</ul>";
     errorsDiv.innerHTML = html;
@@ -182,40 +153,37 @@ function showDetail(index) {
 
   document.getElementById("detailOverlay").style.display = "block";
   document.getElementById("detailPanel").style.display = "block";
-}
+};
 
-function closeDetail() {
+const closeDetail = () => {
   document.getElementById("detailPanel").style.display = "none";
   document.getElementById("detailOverlay").style.display = "none";
-}
+};
 
-function sortTable(n, tableId) {
-  var table,
-    rows,
-    switching,
-    i,
-    x,
-    y,
-    shouldSwitch,
-    dir,
-    switchcount = 0;
-  table = document.getElementById(tableId);
-  switching = true;
-  dir = "asc";
+const sortTable = (n, tableId) => {
+  const table = document.getElementById(tableId);
+  let switching = true;
+  let dir = "asc";
+  let switchcount = 0;
+
   while (switching) {
     switching = false;
-    rows = table.getElementsByTagName("TR");
+    const rows = table.getElementsByTagName("TR");
+    let shouldSwitch = false;
+    let i;
     for (i = 1; i < rows.length - 1; i++) {
       shouldSwitch = false;
-      var tdX = rows[i].getElementsByTagName("TD");
-      var tdY = rows[i + 1].getElementsByTagName("TD");
+      const tdX = rows[i].getElementsByTagName("TD");
+      const tdY = rows[i + 1].getElementsByTagName("TD");
       if (tdX.length <= n || tdY.length <= n) continue;
-      x = tdX[n];
-      y = tdY[n];
-      var xVal = x.getAttribute("data-sort") || x.innerText;
-      var yVal = y.getAttribute("data-sort") || y.innerText;
-      var xNum = parseFloat(xVal);
-      var yNum = parseFloat(yVal);
+      
+      const x = tdX[n];
+      const y = tdY[n];
+      let xVal = x.getAttribute("data-sort") || x.innerText;
+      let yVal = y.getAttribute("data-sort") || y.innerText;
+      
+      const xNum = parseFloat(xVal);
+      const yNum = parseFloat(yVal);
       if (!isNaN(xNum) && !isNaN(yNum)) {
         xVal = xNum;
         yVal = yNum;
@@ -223,12 +191,13 @@ function sortTable(n, tableId) {
         xVal = xVal.toLowerCase();
         yVal = yVal.toLowerCase();
       }
-      if (dir == "asc") {
+      
+      if (dir === "asc") {
         if (xVal > yVal) {
           shouldSwitch = true;
           break;
         }
-      } else if (dir == "desc") {
+      } else if (dir === "desc") {
         if (xVal < yVal) {
           shouldSwitch = true;
           break;
@@ -240,20 +209,22 @@ function sortTable(n, tableId) {
       switching = true;
       switchcount++;
     } else {
-      if (switchcount == 0 && dir == "asc") {
+      if (switchcount === 0 && dir === "asc") {
         dir = "desc";
         switching = true;
       }
     }
   }
-  var headers = table.rows[0].getElementsByTagName("TH");
-  for (var j = 0; j < headers.length; j++) {
-    var icon = headers[j].querySelector(".sort-icon");
+  
+  const headers = table.rows[0].getElementsByTagName("TH");
+  for (let j = 0; j < headers.length; j++) {
+    const icon = headers[j].querySelector(".sort-icon");
     if (icon) icon.innerHTML = "&#8597;";
   }
-  var activeIcon = headers[n].querySelector(".sort-icon");
+  
+  const activeIcon = headers[n].querySelector(".sort-icon");
   if (activeIcon) {
     activeIcon.innerHTML = dir === "asc" ? "&#8593;" : "&#8595;";
     activeIcon.style.color = "#3b82f6";
   }
-}
+};

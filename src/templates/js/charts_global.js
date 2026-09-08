@@ -1,31 +1,37 @@
-function initGlobalCharts() {
+const initGlobalCharts = () => {
   if (!ALL_RUNS || ALL_RUNS.length === 0) return;
 
-  var statusCounts = { PASS: 0, FAIL: 0, ERROR: 0, PARTIAL: 0 };
-  var ammeterTypes = {};
+  const statusCounts = { PASS: 0, FAIL: 0, ERROR: 0, PARTIAL: 0 };
+  const ammeterTypes = {};
 
-  ALL_RUNS.forEach(function (run) {
-    var s = run.status.toUpperCase();
+  ALL_RUNS.forEach((run) => {
+    const s = run.status.toUpperCase();
     if (statusCounts[s] !== undefined) statusCounts[s]++;
     else statusCounts[s] = 1;
 
-    var am = run.ammeter_type;
+    const am = run.ammeter_type;
     if (!ammeterTypes[am]) ammeterTypes[am] = { pass: 0, total: 0 };
     ammeterTypes[am].total++;
     if (s === "PASS") ammeterTypes[am].pass++;
   });
 
-  var pieColors = {
+  const pieColors = {
     PASS: "#28a745",
     FAIL: "#dc3545",
     ERROR: "#ffc107",
     PARTIAL: "#0dcaf0",
   };
-  var pieLabels = Object.keys(statusCounts).filter((k) => statusCounts[k] > 0);
-  var pieData = pieLabels.map((k) => statusCounts[k]);
-  var pieBgColors = pieLabels.map((k) => pieColors[k] || "#6c757d");
+  
+  const pieLabels = Object.keys(statusCounts).filter((k) => statusCounts[k] > 0);
+  const pieData = pieLabels.map((k) => statusCounts[k]);
+  const pieBgColors = pieLabels.map((k) => pieColors[k] || "#6c757d");
 
-  var ctxPie = document.getElementById("globalPieChart").getContext("2d");
+  const ctxPie = document.getElementById("globalPieChart").getContext("2d");
+  
+  const pieOptions = getChartOptions("Overall Run Status Distribution");
+  pieOptions.cutout = "60%";
+  delete pieOptions.scales; // Pie charts don't have scales
+
   globalCharts.push(
     new Chart(ctxPie, {
       type: "doughnut",
@@ -40,23 +46,21 @@ function initGlobalCharts() {
           },
         ],
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "60%",
-        plugins: {
-          title: { display: true, text: "Overall Run Status Distribution" },
-        },
-      },
-    }),
+      options: pieOptions,
+    })
   );
 
-  var amLabels = Object.keys(ammeterTypes);
-  var amData = amLabels.map(
-    (k) => (ammeterTypes[k].pass / ammeterTypes[k].total) * 100,
+  const amLabels = Object.keys(ammeterTypes);
+  const amData = amLabels.map(
+    (k) => (ammeterTypes[k].pass / ammeterTypes[k].total) * 100
   );
 
-  var ctxBar = document.getElementById("globalBarChart").getContext("2d");
+  const ctxBar = document.getElementById("globalBarChart").getContext("2d");
+  
+  const barOptions = getChartOptions("Pass Rate by Ammeter Type (%)");
+  barOptions.plugins.legend = { display: false };
+  barOptions.scales.y.max = 100;
+
   globalCharts.push(
     new Chart(ctxBar, {
       type: "bar",
@@ -72,18 +76,7 @@ function initGlobalCharts() {
           },
         ],
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: { display: true, text: "Pass Rate by Ammeter Type (%)" },
-          legend: { display: false },
-        },
-        scales: {
-          y: { min: 0, max: 100, grid: { color: "#f3f4f6" } },
-          x: { grid: { display: false } },
-        },
-      },
-    }),
+      options: barOptions,
+    })
   );
-}
+};

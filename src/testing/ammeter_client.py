@@ -31,7 +31,9 @@ class AmmeterClient:
                 decoded_str = data.decode("utf-8").strip()
                 value = float(decoded_str)
 
-                return MeasurementResult.create_success(timestamp=timestamp, value=value)
+                return MeasurementResult.create_success(
+                    timestamp=timestamp, value=value
+                )
 
         except socket.timeout:
             return MeasurementResult.create_failure(

@@ -6,7 +6,6 @@ from src.testing.consistency_analyzer import ConsistencyAnalyzer
 from src.utils.Utils import parse_timestamp
 
 
-
 class DashboardGenerator:
     @staticmethod
     def generate_dashboard(
@@ -43,7 +42,9 @@ class DashboardGenerator:
                                     run_obj = data
                                     ts_raw = data.get("timestamp", "")
                                     try:
-                                        run_obj["formatted_time"] = parse_timestamp(ts_raw).strftime("%d/%m/%Y %H:%M:%S")
+                                        run_obj["formatted_time"] = parse_timestamp(
+                                            ts_raw
+                                        ).strftime("%d/%m/%Y %H:%M:%S")
                                     except Exception:
                                         run_obj["formatted_time"] = ts_raw
 

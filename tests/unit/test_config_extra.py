@@ -19,6 +19,7 @@ def test_config_invalid_yaml():
 
     try:
         config = load_config(f_name)
+        assert config.measurements_count == DEFAULT_MEASUREMENTS_COUNT
     finally:
         os.remove(f_name)
 

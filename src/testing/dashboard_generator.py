@@ -3,7 +3,7 @@ import json
 from typing import Optional
 from src.testing.types import TestRunResult, Configuration
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
-from src.utils.Utils import parse_timestamp, format_timestamp_for_display
+from src.utils.Utils import format_timestamp_for_display
 
 
 

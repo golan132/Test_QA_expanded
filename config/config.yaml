@@ -24,6 +24,10 @@ analysis:
     - "std_dev"
     - "min"
     - "max"
+    - "rms"
+    - "variance"
+    - "cv"
+    - "snr"
 
 
 result_management:

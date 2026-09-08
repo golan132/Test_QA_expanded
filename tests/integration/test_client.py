@@ -7,18 +7,18 @@ from Ammeters.Entes_Ammeter import EntesAmmeter
 from Ammeters.Circutor_Ammeter import CircutorAmmeter
 
 
+def safe_start_emulator(EmulatorClass, port):
+    try:
+        EmulatorClass(port).start_server()
+    except OSError:
+        pass # Port already in use, meaning the server is running in the background.
+
 @pytest.fixture(scope="module", autouse=True)
 def start_emulators():
     # Start emulators on default ports
-    threading.Thread(
-        target=lambda: GreenleeAmmeter(5000).start_server(), daemon=True
-    ).start()
-    threading.Thread(
-        target=lambda: EntesAmmeter(5001).start_server(), daemon=True
-    ).start()
-    threading.Thread(
-        target=lambda: CircutorAmmeter(5002).start_server(), daemon=True
-    ).start()
+    threading.Thread(target=safe_start_emulator, args=(GreenleeAmmeter, 5000), daemon=True).start()
+    threading.Thread(target=safe_start_emulator, args=(EntesAmmeter, 5001), daemon=True).start()
+    threading.Thread(target=safe_start_emulator, args=(CircutorAmmeter, 5002), daemon=True).start()
     time.sleep(1)  # wait for servers to start
     yield
 

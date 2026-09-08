@@ -23,6 +23,7 @@ class TestLogger:
         # Setup logger
         logger = logging.getLogger(f"test_{self._test_name}")
         logger.setLevel(logging.DEBUG)
+        logger.propagate = False
 
         # Add file handler
         file_handler = logging.FileHandler(log_file)

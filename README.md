@@ -2,7 +2,7 @@
 
 A comprehensive, configuration-driven testing framework designed for automated Quality Assurance of Embedded Current Measurement Systems (Ammeters). 
 
-This project provides a robust API to communicate with Greenlee, ENTES, and CIRCUTOR ammeter emulators, performing precise time-based sampling, statistical data analysis, automated UI dashboard generation, and historical consistency tracking.
+This project provides a robust API to communicate with Greenlee, ENTES, and CIRCUTOR ammeter emulators, performing precise time-based sampling, statistical data analysis, and historical consistency tracking. The system features a modern React + Vite Single-Page Application (SPA) dashboard powered by a FastAPI backend.
 
 ---
 
@@ -10,96 +10,140 @@ This project provides a robust API to communicate with Greenlee, ENTES, and CIRC
 
 * **Unified API:** A single `AmmeterClient` architecture seamlessly handles different TCP-based hardware.
 * **Precision Sampling:** Absolute time scheduling (`time.monotonic()`) eliminates cumulative drift during long duration tests.
-* **Configurable Execution:** Control the framework entirely via `config/config.yaml` (Mode, Duration, Frequency, Tolerances).
-* **Automated SPA Dashboard:** Automatically generates a beautiful, dependency-free Single Page Application (`index.html`) using **Chart.js**. No backend web server required.
-* **Historical Analysis:** Tracks hardware performance over time to calculate "Relative Consistency" across devices.
-* **Resilient Architecture:** Structured error handling for network timeouts, bad connections, and malformed hardware data.
+* **Configurable Execution:** Control the framework entirely via `config/config.yaml` or dynamically via the web UI (Mode, Duration, Frequency, Tolerances).
+* **Modern Client-Server Architecture:** A robust FastAPI Python backend serves a fast, responsive React UI built with Material-UI (MUI) and Chart.js.
+* **Historical Analysis:** Tracks hardware performance over time to calculate "Relative Consistency" across devices, determining the most reliable ammeter automatically.
+* **Advanced Visual Analytics:** Compare multiple historical runs side-by-side with overlaid time-series charts and aggregate statistical grids.
 
 ---
 
 ## Getting Started
 
 ### 1. Prerequisites
-Ensure you have Python 3.10+ installed. Install the minimal required dependencies:
+Ensure you have Python 3.10+ and Node.js 18+ installed.
+
+**Install Backend Dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
-*(Dependencies: `pytest` for the automated test suite and `pyyaml` for configuration parsing. The UI relies entirely on standard HTML/JS without Python visualization libraries).*
+
+**Install Frontend Dependencies:**
+```bash
+cd frontend
+npm install
+```
 
 ### 2. Configuration
-Modify `config/config.yaml` to define your test parameters. The system supports two modes: `count` and `duration`.
+Modify `config/config.yaml` to define your baseline test parameters. The system supports two sampling modes: `count` and `duration`.
 
-```yaml
-testing:
-  sampling:
-    mode: "count"              # "count" (fixed samples) or "duration" (time-based)
-    measurements_count: 50     # Use for 'count' mode
-    sampling_frequency_hz: 5   # Samples per second
-    timeout_seconds: 2.0       # Timeout for TCP requests
-    acceptable_error_rate: 0.1 # 10% packet loss tolerance for PASS status
-```
+## Advanced Features
 
-### 3. Running the Framework
-The framework is fully integrated into `main.py`. It boots up the local emulators (Greenlee on 5000, ENTES on 5001, Circutor on 5002) and executes the automated test suites.
+### 1. Web Dashboard (React & Vite)
+The system includes a beautiful SPA Dashboard written in React. It offers:
+- Real-time polling of current tests
+- History and analytics of past tests
+- Sorting, filtering, and side-by-side test comparisons
+- Dark/Light mode, with dynamic charts powered by Chart.js
+- Download options for raw data (CSV) and analytical graphs (Time Series and Histogram)
 
+Start the dashboard:
 ```bash
-# Run tests on all ammeters sequentially
-python main.py --ammeter all
-
-# Run a test on a specific ammeter
-python main.py --ammeter greenlee
+python server.py
+# Open a browser at http://localhost:5173 (if using dev server) or http://127.0.0.1:8000
 ```
+
+### 2. Exporting Data (CSV & Graphs)
+To optimize disk usage, the framework generates heavy artifacts **on-demand**. 
+From the React Dashboard, you can simply click the download buttons in the Run Details page to instantly generate and download these files. Alternatively, you can use the CLI:
+```bash
+python main.py --export-run <test_id>
+```
+The following files are supported:
+- **`data.csv`**: Contains all test configurations, expected vs successful sample counts, statistical analysis (Mean, RMS, Variance, etc), and the full list of raw time-series measurements with their success state and errors.
+- **`time_series.png`**: A line chart visualization of the collected measurements over time.
+- **`histogram.png`**: A frequency distribution of the collected currents.
+
+### 3. Running the System
+The framework utilizes a modern decoupled architecture. You will need to start both the backend server and the frontend development server.
+
+**Start the Backend (FastAPI):**
+```bash
+# In the root directory
+python server.py
+```
+*(This automatically spins up the hardware emulators in the background and starts the API server on `http://127.0.0.1:8000`)*
+
+**Start the Frontend (React/Vite):**
+```bash
+# In a new terminal, inside the frontend/ directory
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`.
 
 ---
 
-## Result Management & Analysis (CLI)
+## Viewing Results (Interactive Dashboard)
 
-The framework strictly fulfills all Result Management and Result Analysis requirements natively within the terminal.
+The React frontend serves as your primary control center and analytics dashboard.
 
-### Retrieve Historical Archive
+### The Main Dashboard (`/`)
+- **Control Panel:** Trigger new tests across all ammeters directly from the UI, overriding duration and frequency on the fly.
+- **Accuracy Assessment:** Automatically calculates and highlights the most reliable hardware based on the standard deviation of historical means.
+- **Aggregate Statistical Metrics:** A global breakdown of Min, Max, Mean, Median, and Std Dev across all historical runs for each ammeter type.
+- **Recent Executions:** A fully sortable data table showing all historical runs. Clicking a row navigates to an in-depth run details page.
+
+### Run Comparison Analysis (`/compare`)
+A dedicated view allowing you to select multiple historical runs via a multi-select dropdown and compare them side-by-side using:
+- **Mean Current Comparison:** A bar chart comparing the average current of the selected runs.
+- **Time-Series Overlay:** A line chart that overlays the actual measurement samples of multiple runs to easily spot drift and noise.
+
+### Dedicated Run Details (`/run/:id`)
+A focused page for an individual run, featuring a time-series line chart of the test's signal, a statistical overview bar chart, and a granular breakdown of captured errors.
+
+---
+
+## Command Line Interface (CLI)
+
+While the React dashboard provides a full visual experience, the core framework can also be executed entirely from the terminal using `main.py`. This is ideal for CI/CD pipelines or headless servers.
+
+### Run Tests via CLI
+Execute a test against a specific ammeter or all ammeters sequentially:
+```bash
+python main.py --ammeter greenlee
+python main.py --ammeter all
+```
+*You can override configurations on the fly: `--count 100 --duration 10 --frequency 2.5`*
+
+### Result Management via CLI
 List all past test executions, including their unique UUIDs, timestamp, and pass rates:
 ```bash
 python main.py --history
 ```
 
-### View Specific Run Statistics
-Input a unique Test ID (UUID) to reconstruct the mathematical breakdown for that exact run (Mean, Median, Standard Deviation, Min, Max):
+View the detailed statistical report for a specific test run:
 ```bash
 python main.py --show-run [TEST_ID]
 ```
 
-### Accuracy Assessment & Precision 
-Mathematically scan the entire history of runs to compute the **Mean of Means** and the **Drift (Standard Deviation)**, proving which ammeter is objectively the most reliable:
+Run the "Relative Consistency" algorithms across the entire archive:
 ```bash
 python main.py --analyze-consistency
 ```
 
 ---
 
-## Viewing Results (Dashboard)
-
-After execution, the framework automatically generates a unified data structure in the `results/` directory and rebuilds the frontend.
-
-To view your test results visually, simply open `index.html` in your web browser. 
-
-### The Global Dashboard
-The `index.html` file serves as the master dashboard. It features two primary tabs:
-- **Home (Recent Executions):** A dynamically sortable table (via Javascript) of every test run, allowing you to instantly view detailed pass rates and execution metadata. Hover over any column header for an interactive tooltip explaining the metric!
-- **Full Dashboard (Analytics):** Visual line graphs and doughnut charts built in Chart.js showing overall pass rate trends, system volume, and the **Relative Consistency Analysis** comparing all hardware side-by-side.
-
-### The Unified Folder Structure
-Raw data and specific test artifacts are stored in `results/runs/`. Each execution of `main.py` creates a timestamped **session folder** (e.g., `2026-09-08_002530/`). Inside, each ammeter tested gets its own subfolder containing a strict `data.json` file carrying all telemetry and metadata.
-
----
-
 ## Testing the Framework
-The framework includes a fully automated `pytest` suite simulating edge cases, configuration validation, consistency algorithms, and persistence mapping without invoking network requests.
+
+The backend features an exhaustive `pytest` suite simulating edge cases, configuration validation, consistency algorithms, and native FastAPI API endpoint validation.
 
 ```bash
-python -m pytest tests/
+# Run all 58 backend tests
+$env:PYTHONPATH="." 
+pytest tests/
 ```
 
 ---
 
 ## Documentation
-For a deep dive into the architectural decisions, structural patterns, and the legacy bugs patched from the original emulator codebase, please refer to the technical specification in [docs/design.md](docs/design.md).
+For a deep dive into the architectural decisions, structural patterns, and the transition to the modern React/FastAPI stack, please refer to the technical specification in [docs/design.md](docs/design.md).

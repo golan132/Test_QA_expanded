@@ -38,6 +38,14 @@ class ConsoleReporter:
             report.append(f"  Mean: {stats.get('mean')}")
             report.append(f"  Median: {stats.get('median')}")
             report.append(f"  Std Dev: {stats.get('std_dev')}")
+            if "rms" in stats:
+                report.append(f"  RMS: {stats.get('rms')}")
+            if "variance" in stats:
+                report.append(f"  Variance: {stats.get('variance')}")
+            if "cv" in stats:
+                report.append(f"  CV: {stats.get('cv')}")
+            if "snr" in stats:
+                report.append(f"  SNR: {stats.get('snr')}")
 
         if result.errors:
             report.append("-" * 30)
@@ -74,6 +82,14 @@ class ConsoleReporter:
             report.append(f"  Mean: {stats.get('mean')}")
             report.append(f"  Median: {stats.get('median')}")
             report.append(f"  Std Dev: {stats.get('std_dev')}")
+            if "rms" in stats:
+                report.append(f"  RMS: {stats.get('rms')}")
+            if "variance" in stats:
+                report.append(f"  Variance: {stats.get('variance')}")
+            if "cv" in stats:
+                report.append(f"  CV: {stats.get('cv')}")
+            if "snr" in stats:
+                report.append(f"  SNR: {stats.get('snr')}")
 
         errors = result.get("errors")
         if errors:

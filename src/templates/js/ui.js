@@ -45,6 +45,10 @@ const showDetail = (index) => {
   document.getElementById("detailMin").textContent = fmt(stats.min);
   document.getElementById("detailMax").textContent = fmt(stats.max);
   document.getElementById("detailStdDev").textContent = fmt(stats.std_dev);
+  document.getElementById("detailRms").textContent = fmt(stats.rms);
+  document.getElementById("detailVariance").textContent = fmt(stats.variance);
+  document.getElementById("detailCv").textContent = fmt(stats.cv);
+  document.getElementById("detailSnr").textContent = fmt(stats.snr);
 
   destroyCharts(currentDetailCharts);
 

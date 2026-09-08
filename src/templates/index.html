@@ -18,6 +18,15 @@
         <div class="navbar-brand">Test QA Framework</div>
         <button id="btn-home" class="nav-btn active" onclick="switchTab('home')">Home</button>
         <button id="btn-analytics" class="nav-btn" onclick="switchTab('analytics')">Full Dashboard</button>
+        <button id="btn-run" class="nav-btn" onclick="runTestsFromUI()">Run Tests</button>
+        <button id="btn-run-errors" class="nav-btn" style="background:#ef4444;color:white;" onclick="runErrorsFromUI()">Simulate Errors</button>
+    </div>
+
+    <!-- Global Loader -->
+    <div id="global-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; flex-direction:column; justify-content:center; align-items:center; color:white;">
+        <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+        <h2 style="margin-top:20px;">Running tests... Please wait.</h2>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     </div>
 
     <!-- Modal for Detailed Run Report -->
@@ -56,8 +65,15 @@
                 <th title="The lowest current measured">Min (A)</th>
                 <th title="The highest current measured">Max (A)</th>
                 <th title="Standard Deviation: The amount of variation or dispersion of the current measurements">Std Dev (A)</th>
+                <th title="Root Mean Square: The effective current (AC equivalent)">RMS (A)</th>
+                <th title="Variance: Measure of how far a set of numbers is spread out from their average value">Variance</th>
+                <th title="Coefficient of Variation: The ratio of the standard deviation to the mean">CV</th>
+                <th title="Signal-to-Noise Ratio: The ratio of the mean to the standard deviation">SNR</th>
             </tr>
-            <tr><td id="detailMean"></td><td id="detailMedian"></td><td id="detailMin"></td><td id="detailMax"></td><td id="detailStdDev"></td></tr>
+            <tr>
+                <td id="detailMean"></td><td id="detailMedian"></td><td id="detailMin"></td><td id="detailMax"></td><td id="detailStdDev"></td>
+                <td id="detailRms"></td><td id="detailVariance"></td><td id="detailCv"></td><td id="detailSnr"></td>
+            </tr>
         </table>
         
         <div class="grid-2">
@@ -126,5 +142,29 @@
         </div>
     </div>
 
+    <script>
+        async function runTestsFromUI() {
+            if(!confirm("Run all ammeters in parallel?")) return;
+            document.getElementById('global-loader').style.display = 'flex';
+            try {
+                await fetch('/api/run', { method: 'POST' });
+                window.location.reload();
+            } catch(e) {
+                alert("Failed to run tests.");
+                document.getElementById('global-loader').style.display = 'none';
+            }
+        }
+        async function runErrorsFromUI() {
+            if(!confirm("Run error simulation suite?")) return;
+            document.getElementById('global-loader').style.display = 'flex';
+            try {
+                await fetch('/api/run_errors', { method: 'POST' });
+                window.location.reload();
+            } catch(e) {
+                alert("Failed to run errors.");
+                document.getElementById('global-loader').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

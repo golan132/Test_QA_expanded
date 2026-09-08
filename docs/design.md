@@ -9,6 +9,14 @@ This document outlines the core technical and architectural decisions made while
 **Solution:** We implemented the **Factory Pattern** combined with a **Stateless Client Wrapper**. 
 The `AmmeterFactory` instantiates an `AmmeterClient` which handles pure TCP socket logic. The client knows nothing about the internal math of the ammeters—it only knows which byte payload to send and what port to connect to. This guarantees uniform exception handling across all devices (connection timeouts, parsing errors, etc.).
 
+### Phase 7: Persistence & Export
+The `PersistenceLayer` serializes the resulting object into a self-contained `data.json` file inside a dynamically generated timestamped directory. 
+To optimize disk usage, heavy artifacts are generated **on-demand** (either via CLI flags or Web API routes) rather than automatically for every test. When requested:
+1. **CSV Export:** It dynamically parses the `data.json` and writes a `data.csv` file that includes both the statistical summary block and the flat list of all measurements for spreadsheet viewing.
+2. **Graph Generation:** It dynamically uses `matplotlib` (running headlessly via the 'Agg' backend) to plot `time_series.png` and `histogram.png` of the current distribution.
+
+These artifacts ensure a durable historical record of every test, facilitating analysis without a persistent relational database. They are served dynamically over HTTP by the FastAPI application for download in the React frontend.
+
 ### 2. Measurement Sampling & Timing Precision
 **Requirement:** Configurable number of measurements, duration, and sampling frequency with precise timing.
 **Solution:** 
@@ -35,7 +43,8 @@ Statuses are rigorously evaluated against the `acceptable_error_rate` defined in
 **Requirement:** Robust result archiving, visualization, and zero-server UI.
 **Solution:** 
 - **Unified Hierarchy:** All test runs are grouped by timestamp under `results/runs/`. Each contains a raw `data.json` file.
-- **Client-Side Interactive Dashboard (Bonus):** While initial plans considered generating static `.png` files via `matplotlib`, we pivoted to a much cleaner architectural approach: an interactive, zero-dependency SPA utilizing **Chart.js**. The framework generates a completely static HTML report that dynamically parses the JSON data to render interactive visualizations entirely on the client-side.
+- **Client-Server Architecture (React & FastAPI):** While the original proof-of-concept utilized a static HTML file, the system has evolved into a robust decoupled architecture. A **FastAPI** Python backend exposes REST endpoints (`/api/run`, `/api/runs`, `/api/consistency`) which power a modern **React + Vite** Single-Page Application (SPA) utilizing Material-UI (MUI) and Chart.js.
+- **Advanced Visual Analytics:** The React frontend provides complex analytical views, including a globally sortable run history, a dedicated Run Details page with statistical breakdowns, and a `/compare` route that allows users to overlay time-series measurements from multiple hardware runs side-by-side.
 
 ### 6. Configuration-Driven Architecture (Bonus)
 **Requirement:** Create a configuration-driven testing approach.
@@ -72,8 +81,11 @@ To ensure a robust and production-ready solution, the project was executed in th
   - Achieved **98% overall test coverage** across over 50 unit tests.
   - Enforced strict PEP8 coding standards with `flake8` and `black` to ensure **0 linting errors**.
 
-- **5. Frontend Visualization Modularization & Refactoring:** 
-  To keep the frontend code maintainable and adhere to senior engineering best practices, we modularized the UI into separate JavaScript and CSS files within `src/templates/`. The codebase strictly utilizes modern ES6+ syntax (`const`/`let`, arrow functions) and employs the **Factory Pattern** (`getChartOptions`) to deduplicate all Chart.js configurations. The `dashboard_generator.py` script automatically concatenates these modules, injecting them directly into the final `index.html` report at runtime.
+- **5. Frontend Visualization & React Migration:** 
+  To scale the visual capabilities of the framework, we migrated from a static HTML generator to a modern **React + TypeScript** ecosystem built on Vite. This allowed us to introduce complex state management (e.g., sorting tables, multi-select run comparisons, interactive tooltips) using Material-UI components, drastically improving the user experience over a static report.
+  
+- **6. Native API Integration (OOP Backend):**
+  Initially, the API server utilized `subprocess.run()` to launch CLI commands for each test. We refactored the FastAPI server (`server.py`) to natively instantiate the `AmmeterTestFramework` and `ErrorSimulator` objects in memory. This eliminates the massive overhead of spinning up new Python interpreters for every request, allows for dynamic config manipulation on-the-fly, and adheres strictly to industry standard Object-Oriented server design. Fully verified with FastAPI `TestClient` API unit tests.
 
 ---
 

@@ -3,6 +3,7 @@ import json
 from typing import Optional
 from src.testing.types import TestRunResult, Configuration
 from src.testing.consistency_analyzer import ConsistencyAnalyzer
+from src.testing.persistence import PersistenceLayer
 from src.utils.Utils import parse_timestamp
 
 
@@ -12,11 +13,9 @@ class DashboardGenerator:
         result: TestRunResult, target_dir: str, config: Optional[Configuration] = None
     ) -> str:
         try:
-
             DashboardGenerator.generate_global_dashboard(config)
             return target_dir
-
-        except Exception as e:
+        except (json.JSONDecodeError, FileNotFoundError, OSError) as e:
             print(f"Warning: Failed to generate dashboard for {result.test_id}: {e}")
             return ""
 
@@ -28,33 +27,23 @@ class DashboardGenerator:
             index_path = "index.html"
             consistency = ConsistencyAnalyzer.analyze_history(runs_dir)
 
-            runs_data = []
-            if os.path.exists(runs_dir):
-                for root, _, files in os.walk(runs_dir):
-                    for file in files:
-                        if file == "data.json":
-                            try:
-                                with open(
-                                    os.path.join(root, file), "r", encoding="utf-8"
-                                ) as f:
-                                    data = json.load(f)
-                                    # Capture the whole data to use in SPA
-                                    run_obj = data
-                                    ts_raw = data.get("timestamp", "")
-                                    try:
-                                        run_obj["formatted_time"] = parse_timestamp(
-                                            ts_raw
-                                        ).strftime("%d/%m/%Y %H:%M:%S")
-                                    except Exception:
-                                        run_obj["formatted_time"] = ts_raw
-
-                                    # Calculate relative run directory for loading graphs
-                                    html_rel_path = root.replace(chr(92), "/")
-                                    run_obj["run_dir"] = html_rel_path
-
-                                    runs_data.append(run_obj)
-                            except Exception:
-                                pass
+            runs_data = PersistenceLayer.get_all_runs(runs_dir)
+            
+            # Enhance runs_data with formatted_time and run_dir for the dashboard
+            for run_obj in runs_data:
+                ts_raw = run_obj.get("timestamp", "")
+                try:
+                    run_obj["formatted_time"] = parse_timestamp(ts_raw).strftime("%d/%m/%Y %H:%M:%S")
+                except Exception:
+                    run_obj["formatted_time"] = ts_raw
+                
+                # We need to find the source directory for this run to get run_dir
+                # Since get_all_runs doesn't return _source_dir, we need to look it up
+                test_id = run_obj.get("test_id")
+                if test_id:
+                    full_run = PersistenceLayer.get_run_by_id(test_id, runs_dir)
+                    if full_run and "_source_dir" in full_run:
+                        run_obj["run_dir"] = full_run["_source_dir"].replace(chr(92), "/")
 
             runs_data.sort(key=lambda x: x["timestamp"], reverse=True)
 
@@ -146,5 +135,5 @@ class DashboardGenerator:
             with open(index_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
-        except Exception as e:
+        except (json.JSONDecodeError, FileNotFoundError, OSError) as e:
             print(f"Warning: Failed to generate global dashboard: {e}")

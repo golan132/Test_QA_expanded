@@ -51,14 +51,11 @@ class AmmeterTestFramework:
                 if sleep_time > 0:
                     time.sleep(sleep_time)
 
-            # Basic counting
             successful = sum(1 for r in results if r.success)
             failed = expected_samples - successful
 
-            # Phase 6: Statistical Analysis
             stats = AnalysisEngine.analyze(results, self.config.metrics)
 
-            # Collect errors
             errors = []
             for r in results:
                 if not r.success and r.error_message:
@@ -74,7 +71,7 @@ class AmmeterTestFramework:
                 test_id=str(uuid.uuid4()),
                 timestamp=get_current_timestamp(),
                 ammeter_type=ammeter_type,
-                status="PENDING",  # to be calculated below
+                status="PENDING",
                 configuration=self.config,
                 expected_samples=expected_samples,
                 attempted_samples=len(results),
@@ -85,16 +82,12 @@ class AmmeterTestFramework:
                 errors=errors,
             )
 
-            # Phase 8: Calculate Status and Print Report
             run_result.status = ConsoleReporter.calculate_status(run_result)
 
-            # Save result
             run_dir = PersistenceLayer.save_result(run_result, self.session_dir)
 
-            # Generate Dashboard
             DashboardGenerator.generate_dashboard(run_result, run_dir, self.config)
 
-            # Print report
             report_text = ConsoleReporter.generate_report(run_result)
             self.logger.info(report_text)
             self.logger.info(

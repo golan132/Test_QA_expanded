@@ -15,3 +15,12 @@ def get_current_timestamp() -> str:
 def parse_timestamp(timestamp: str) -> datetime:
     """Parse the standard ISO 8601 timestamp string into a datetime object."""
     return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+
+
+def format_timestamp_for_display(timestamp: str) -> str:
+    """Format an ISO 8601 timestamp string into a human-readable format."""
+    try:
+        dt = parse_timestamp(timestamp)
+        return dt.strftime("%d/%m/%Y %H:%M:%S")
+    except Exception:
+        return timestamp

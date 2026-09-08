@@ -13,15 +13,6 @@ class Configuration:
     metrics: List[str] = field(
         default_factory=lambda: ["mean", "median", "std_dev", "min", "max"]
     )
-    visualizations_enabled: bool = True
-    plot_types: List[str] = field(
-        default_factory=lambda: [
-            "time_series",
-            "histogram",
-            "global_pie_chart",
-            "global_bar_chart",
-        ]
-    )
     result_base_dir: str = "results/runs"
 
 

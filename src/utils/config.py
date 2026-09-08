@@ -83,20 +83,6 @@ def load_config(config_path: str) -> Configuration:
     if metrics is None:
         metrics = ["mean", "median", "std_dev", "min", "max"]
 
-    visualization = analysis.get("visualization", {})
-    if visualization is None:
-        visualization = {}
-
-    vis_enabled = visualization.get("enabled", True)
-    plot_types = visualization.get("plot_types")
-    if plot_types is None:
-        plot_types = [
-            "time_series",
-            "histogram",
-            "global_pie_chart",
-            "global_bar_chart",
-        ]
-
     result_management = data.get("result_management", {})
     if result_management is None:
         result_management = {}
@@ -111,7 +97,5 @@ def load_config(config_path: str) -> Configuration:
         acceptable_error_rate=float(error_rate),
         ammeters_config=ammeters_config,
         metrics=metrics,
-        visualizations_enabled=vis_enabled,
-        plot_types=plot_types,
         result_base_dir=base_dir,
     )

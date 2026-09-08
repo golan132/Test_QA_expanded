@@ -20,8 +20,6 @@ class DashboardGenerator:
         result: TestRunResult, target_dir: str, config: Optional[Configuration] = None
     ) -> str:
         try:
-            config.plot_types if config else ["time_series", "histogram"]
-            config.visualizations_enabled if config else True
             config.result_base_dir if config else "results/runs"
 
             timestamps = []
@@ -45,12 +43,6 @@ class DashboardGenerator:
     @staticmethod
     def generate_global_dashboard(config: Optional[Configuration] = None):
         try:
-            plot_types = (
-                config.plot_types
-                if config
-                else ["global_pie_chart", "global_bar_chart"]
-            )
-            config.visualizations_enabled if config else True
             runs_dir = config.result_base_dir if config else "results/runs"
 
             index_path = "index.html"

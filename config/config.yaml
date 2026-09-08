@@ -24,13 +24,7 @@ analysis:
     - "std_dev"
     - "min"
     - "max"
-  visualization:
-    enabled: true
-    plot_types:
-      - "time_series"
-      - "histogram"
-      - "global_pie_chart"
-      - "global_bar_chart"
+
 
 result_management:
   base_dir: "results/runs"

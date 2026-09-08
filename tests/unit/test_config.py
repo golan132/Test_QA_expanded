@@ -134,6 +134,4 @@ def test_load_config_full_yaml(tmp_path):
     path.write_text(yaml_content)
     config = load_config(str(path))
     assert config.metrics == ["mean", "min"]
-    assert config.visualizations_enabled is False
-    assert config.plot_types == ["time_series"]
     assert config.result_base_dir == "custom/output"

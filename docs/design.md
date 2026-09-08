@@ -2,6 +2,102 @@
 
 This document outlines the core technical and architectural decisions made while designing the Ammeter Testing QA Framework, explicitly addressing the requirements of the **Embedded Systems Quality Assurance** exam.
 
+## System Architecture Overview
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TB
+    subgraph "Frontend Layer"
+        UI[React + Vite SPA<br/>Dashboard & Analytics]
+    end
+    
+    subgraph "API Layer"
+        API[FastAPI Server<br/>Port 8000]
+    end
+    
+    subgraph "Core Framework"
+        TF[AmmeterTestFramework]
+        AE[AnalysisEngine]
+        CA[ConsistencyAnalyzer]
+        PL[PersistenceLayer]
+        EM[EmulatorManager]
+    end
+    
+    subgraph "Hardware Emulators"
+        G[Greenlee<br/>TCP:5000]
+        E[ENTES<br/>TCP:5001]
+        C[CIRCUTOR<br/>TCP:5002]
+    end
+    
+    subgraph "Storage"
+        FS[(File System<br/>results/runs/)]
+    end
+    
+    UI -->|REST API| API
+    API -->|Native Calls| TF
+    API -->|Lifecycle| EM
+    EM -->|Background Threads| G
+    EM -->|Background Threads| E
+    EM -->|Background Threads| C
+    TF -->|TCP Socket| G
+    TF -->|TCP Socket| E
+    TF -->|TCP Socket| C
+    TF --> AE
+    TF --> CA
+    TF --> PL
+    PL --> FS
+    AE --> PL
+    CA --> PL
+```
+
+## Data Flow Diagram
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart LR
+    subgraph "Input"
+        CFG[config.yaml]
+        CLI[CLI Args / API Params]
+    end
+    
+    subgraph "Processing"
+        VAL[Config Validation]
+        SCH[Absolute Deadline Scheduler]
+        SAM[Sampling Loop]
+        ANA[Analysis Engine]
+        CON[Consistency Analyzer]
+    end
+    
+    subgraph "Output"
+        JSON[data.json]
+        CSV[data.csv]
+        TS[time_series.png]
+        HIST[histogram.png]
+        DASH[Dashboard UI]
+    end
+    
+    CFG --> VAL
+    CLI --> VAL
+    VAL --> SCH
+    SCH --> SAM
+    SAM -->|Measurements| ANA
+    SAM -->|Raw Data| PL
+    ANA -->|Statistics| PL
+    PL --> JSON
+    PL --> CSV
+    PL --> TS
+    PL --> HIST
+    PL --> DASH
+    PL --> CON
+    CON -->|Relative Consistency| DASH
+```
+
 ## Compliance with Exam Specification
 
 ### 1. Unified Measurement API
@@ -55,6 +151,34 @@ Eliminated all hardcoded parameters from the codebase. The entire framework is o
 
 ## Development Methodology
 
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TD
+    subgraph "Phase 1: Foundation"
+        LCR[Legacy Code Review<br/>& Bug Fixes]
+        DMA[Domain Modeling<br/>& Architecture]
+    end
+    
+    subgraph "Phase 2: Core Engines"
+        ED[Engine Development]
+        QA[Quality Assurance<br/>& Testing]
+    end
+    
+    subgraph "Phase 3: Frontend & API"
+        FV[Frontend Visualization<br/>& React Migration]
+        NA[Native API Integration<br/>(OOP Backend)]
+    end
+    
+    LCR --> DMA
+    DMA --> ED
+    ED --> QA
+    QA --> FV
+    FV --> NA
+```
+
 To ensure a robust and production-ready solution, the project was executed in the following structured methodology:
 
 - **1. Legacy Code Review & Bug Fixes:** 
@@ -90,6 +214,32 @@ To ensure a robust and production-ready solution, the project was executed in th
 ---
 
 ## Technical Constraints Respected & Design Trade-offs
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart LR
+    subgraph "Constraints"
+        STD[Standard Library Only]
+        MIN[Minimize Dependencies]
+        XPLAT[Cross-Platform]
+        READ[Readable Code]
+    end
+    
+    subgraph "Decisions"
+        NO_PANDAS[No pandas/numpy/scipy]
+        PYAML[Only pyyaml + pytest]
+        SOCKET[Stateless TCP per Sample]
+        TYPES[Strict Type Hints]
+    end
+    
+    STD --> NO_PANDAS
+    MIN --> PYAML
+    XPLAT --> SOCKET
+    READ --> TYPES
+```
 
 - **Standard Library over External Analytics:** We explicitly avoided heavy data science libraries like `pandas`, `numpy`, or `scipy`. While this required building custom statistical parsing logic, given the relatively low mathematical complexity required (standard mean/median calculations), dropping these massive dependencies dramatically simplifies installation and cross-platform compatibility. Only `pyyaml` (for config parsing) and `pytest` (for automated testing) were added.
 - **Stateless TCP Connections:** We utilized a fresh socket connection per measurement sample. While this adds minor connection overhead, it ensures absolute resilience against stale sockets and connection drops, especially since the rudimentary emulators do not reliably support persistent HTTP-style keep-alive logic.

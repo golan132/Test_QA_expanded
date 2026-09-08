@@ -6,6 +6,64 @@ This project provides a robust API to communicate with Greenlee, ENTES, and CIRC
 
 ---
 
+## System Architecture
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TB
+    subgraph "User Interface"
+        UI[React + Vite SPA<br/>Dashboard]
+    end
+    
+    subgraph "Backend Services"
+        API[FastAPI Server<br/>Port 8000]
+        EM[Emulator Manager<br/>Background Threads]
+    end
+    
+    subgraph "Ammeter Emulators"
+        G[Greenlee<br/>Port 5000]
+        E[ENTES<br/>Port 5001]
+        C[CIRCUTOR<br/>Port 5002]
+    end
+    
+    subgraph "Core Framework"
+        TF[Test Framework<br/>AmmeterTestFramework]
+        AE[Analysis Engine]
+        CL[Consistency Analyzer]
+        PL[Persistence Layer]
+    end
+    
+    subgraph "Storage"
+        FS[(File System<br/>results/runs/)]
+    end
+    
+    UI -->|REST API| API
+    API -->|Native Calls| TF
+    API -->|Start/Stop| EM
+    EM -->|TCP| G
+    EM -->|TCP| E
+    EM -->|TCP| C
+    TF -->|TCP| G
+    TF -->|TCP| E
+    TF -->|TCP| C
+    TF --> AE
+    TF --> CL
+    TF --> PL
+    PL --> FS
+    AE --> PL
+    CL --> PL
+```
+
+---
+
+## Documentation
+For a deep dive into the architectural decisions, structural patterns, and the transition to the modern React/FastAPI stack, please refer to the technical specification in [docs/design.md](docs/design.md).
+
+---
+
 ## Key Features
 
 * **Unified API:** A single `AmmeterClient` architecture seamlessly handles different TCP-based hardware.
@@ -64,6 +122,42 @@ The following files are supported:
 - **`histogram.png`**: A frequency distribution of the collected currents.
 
 ### 3. Running the System
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart LR
+    subgraph "Terminal 1"
+        BE[python server.py]
+        EM[Emulator Manager]
+        G[Greenlee:5000]
+        E[ENTES:5001]
+        C[CIRCUTOR:5002]
+        API[FastAPI:8000]
+    end
+    
+    subgraph "Terminal 2"
+        FE[npm run dev]
+        VITE[Vite Dev Server:5173]
+    end
+    
+    subgraph "Browser"
+        UI[React SPA]
+    end
+    
+    BE --> EM
+    EM --> G
+    EM --> E
+    EM --> C
+    BE --> API
+    FE --> VITE
+    VITE --> UI
+    UI -->|REST API| API
+    UI -->|WebSocket| API
+```
+
 The framework utilizes a modern decoupled architecture. You will need to start both the backend server and the frontend development server.
 
 **Start the Backend (FastAPI):**
@@ -105,6 +199,31 @@ A focused page for an individual run, featuring a time-series line chart of the 
 
 ## Command Line Interface (CLI)
 
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TD
+    CLI[main.py] -->|--ammeter| TF[AmmeterTestFramework]
+    CLI -->|--history| PL[PersistenceLayer]
+    CLI -->|--show-run| PL
+    CLI -->|--analyze-consistency| CA[ConsistencyAnalyzer]
+    CLI -->|--export-run| PL
+    CLI -->|--simulate-errors| ES[ErrorSimulator]
+    
+    TF -->|TCP| G[Greenlee:5000]
+    TF -->|TCP| E[ENTES:5001]
+    TF -->|TCP| C[CIRCUTOR:5002]
+    TF --> AE[AnalysisEngine]
+    TF --> PL
+    PL --> FS[(results/runs/)]
+    CA --> PL
+    ES -->|Fault Injection| G
+    ES -->|Fault Injection| E
+    ES -->|Fault Injection| C
+```
+
 While the React dashboard provides a full visual experience, the core framework can also be executed entirely from the terminal using `main.py`. This is ideal for CI/CD pipelines or headless servers.
 
 ### Run Tests via CLI
@@ -135,6 +254,62 @@ python main.py --analyze-consistency
 
 ## Testing the Framework
 
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TB
+    subgraph "Test Suite"
+        UT[Unit Tests<br/>tests/unit/]
+        IT[Integration Tests<br/>tests/integration/]
+    end
+    
+    subgraph "Unit Test Coverage"
+        TC[test_config.py]
+        TF[test_framework.py]
+        AC[test_ammeter_client.py]
+        AF[test_ammeter_factory.py]
+        AN[test_analysis.py]
+        CO[test_consistency.py]
+        CA[test_consistency_analyzer.py]
+        DA[test_dashboard.py]
+        PE[test_persistence.py]
+        RE[test_reporter.py]
+        SE[test_server.py]
+        LO[test_logger_extra.py]
+    end
+    
+    subgraph "Integration Test Coverage"
+        IC[test_client.py]
+    end
+    
+    subgraph "Tools"
+        PYTEST[pytest]
+        MOCK[unittest.mock]
+        TC_CLIENT[FastAPI TestClient]
+    end
+    
+    UT --> TC
+    UT --> TF
+    UT --> AC
+    UT --> AF
+    UT --> AN
+    UT --> CO
+    UT --> CA
+    UT --> DA
+    UT --> PE
+    UT --> RE
+    UT --> SE
+    UT --> LO
+    IT --> IC
+    
+    PYTEST --> UT
+    PYTEST --> IT
+    MOCK --> UT
+    TC_CLIENT --> IT
+```
+
 The backend features an exhaustive `pytest` suite simulating edge cases, configuration validation, consistency algorithms, and native FastAPI API endpoint validation.
 
 ```bash
@@ -143,7 +318,3 @@ $env:PYTHONPATH="."
 pytest tests/
 ```
 
----
-
-## Documentation
-For a deep dive into the architectural decisions, structural patterns, and the transition to the modern React/FastAPI stack, please refer to the technical specification in [docs/design.md](docs/design.md).

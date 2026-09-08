@@ -72,8 +72,8 @@ To ensure a robust and production-ready solution, the project was executed in th
   - Achieved **98% overall test coverage** across over 50 unit tests.
   - Enforced strict PEP8 coding standards with `flake8` and `black` to ensure **0 linting errors**.
 
-- **5. Frontend Visualization Modularization:** 
-  To keep the frontend code maintainable, we modularized the UI into separate JavaScript and CSS files within `src/templates/`. The `dashboard_generator.py` script automatically concatenates and minifies these modules, injecting them directly into the final `index.html` report at runtime.
+- **5. Frontend Visualization Modularization & Refactoring:** 
+  To keep the frontend code maintainable and adhere to senior engineering best practices, we modularized the UI into separate JavaScript and CSS files within `src/templates/`. The codebase strictly utilizes modern ES6+ syntax (`const`/`let`, arrow functions) and employs the **Factory Pattern** (`getChartOptions`) to deduplicate all Chart.js configurations. The `dashboard_generator.py` script automatically concatenates these modules, injecting them directly into the final `index.html` report at runtime.
 
 ---
 

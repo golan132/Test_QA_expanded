@@ -84,7 +84,7 @@ To view your test results visually, simply open `index.html` in your web browser
 
 ### The Global Dashboard
 The `index.html` file serves as the master dashboard. It features two primary tabs:
-- **Home (Recent Executions):** A dynamically sortable table (via Javascript) of every test run, allowing you to instantly view detailed pass rates and execution metadata.
+- **Home (Recent Executions):** A dynamically sortable table (via Javascript) of every test run, allowing you to instantly view detailed pass rates and execution metadata. Hover over any column header for an interactive tooltip explaining the metric!
 - **Full Dashboard (Analytics):** Visual line graphs and doughnut charts built in Chart.js showing overall pass rate trends, system volume, and the **Relative Consistency Analysis** comparing all hardware side-by-side.
 
 ### The Unified Folder Structure

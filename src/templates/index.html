@@ -37,13 +37,26 @@
         
         <h3>Execution Summary</h3>
         <table>
-            <tr><th>Mode</th><th>Frequency (Hz)</th><th>Expected</th><th>Attempted</th><th>Successful</th><th>Failed</th></tr>
+            <tr>
+                <th title="The operational mode configured for this test (e.g. continuous, intermittent)">Mode</th>
+                <th title="The rate at which current samples were requested">Frequency (Hz)</th>
+                <th title="The total number of samples requested by the configuration">Expected</th>
+                <th title="The number of sample requests actually sent to the emulator">Attempted</th>
+                <th title="The number of sample requests that returned valid data">Successful</th>
+                <th title="The number of sample requests that resulted in an error (e.g. timeout, disconnect)">Failed</th>
+            </tr>
             <tr><td id="detailMode"></td><td id="detailFrequency"></td><td id="detailExpected"></td><td id="detailAttempted"></td><td id="detailSuccessful"></td><td id="detailFailed"></td></tr>
         </table>
         
         <h3>Statistical Data</h3>
         <table>
-            <tr><th>Mean (A)</th><th>Median (A)</th><th>Min (A)</th><th>Max (A)</th><th>Std Dev (A)</th></tr>
+            <tr>
+                <th title="The average current measured during the run">Mean (A)</th>
+                <th title="The middle value of the sorted current measurements">Median (A)</th>
+                <th title="The lowest current measured">Min (A)</th>
+                <th title="The highest current measured">Max (A)</th>
+                <th title="Standard Deviation: The amount of variation or dispersion of the current measurements">Std Dev (A)</th>
+            </tr>
             <tr><td id="detailMean"></td><td id="detailMedian"></td><td id="detailMin"></td><td id="detailMax"></td><td id="detailStdDev"></td></tr>
         </table>
         
@@ -72,10 +85,10 @@
             <h2 style="margin-top:0">Relative Consistency Analysis</h2>
             <table id="consistencyTable">
                 <thead><tr>
-                    <th onclick="sortTable(0, 'consistencyTable')">Ammeter Type <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(1, 'consistencyTable')">Historical Runs <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(2, 'consistencyTable')">Mean of Means (A) <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(3, 'consistencyTable')">Std Dev of Means (A) <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(0, 'consistencyTable')" title="The model of the ammeter">Ammeter Type <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(1, 'consistencyTable')" title="Total number of test executions recorded for this ammeter">Historical Runs <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(2, 'consistencyTable')" title="The average of the mean current values across all historical runs">Mean of Means (A) <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(3, 'consistencyTable')" title="Standard Deviation of Means: Shows how much the mean current fluctuates from run to run. A lower value indicates higher consistency across different executions.">Std Dev of Means (A) <span class="sort-icon">&#8597;</span></th>
                 </tr></thead>
                 <tbody>{consistency_html}</tbody>
             </table>
@@ -85,12 +98,12 @@
             <h2 style="margin-top:0">Recent Execution History</h2>
             <table id="runsTable">
                 <thead><tr>
-                    <th onclick="sortTable(0, 'runsTable')">Timestamp <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(1, 'runsTable')">Ammeter Type <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(2, 'runsTable')">Expected Samples <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(3, 'runsTable')">Successful Samples <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(4, 'runsTable')">Pass Rate <span class="sort-icon">&#8597;</span></th>
-                    <th onclick="sortTable(5, 'runsTable')">Status <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(0, 'runsTable')" title="When the test was executed">Timestamp <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(1, 'runsTable')" title="The model of the ammeter tested">Ammeter Type <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(2, 'runsTable')" title="The number of current samples requested from the emulator">Expected Samples <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(3, 'runsTable')" title="The number of samples successfully read without error">Successful Samples <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(4, 'runsTable')" title="Percentage of successful samples against expected samples">Pass Rate <span class="sort-icon">&#8597;</span></th>
+                    <th onclick="sortTable(5, 'runsTable')" title="Overall result of the test run">Status <span class="sort-icon">&#8597;</span></th>
                     <th>Action</th>
                 </tr></thead>
                 <tbody>{runs_html}</tbody>

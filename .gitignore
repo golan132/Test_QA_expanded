@@ -28,3 +28,4 @@ env/
 # Project specific
 results/
 config/local_config.yaml
+index.html
